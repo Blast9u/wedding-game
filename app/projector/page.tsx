@@ -15,6 +15,7 @@ const GUEST_URL = process.env.NEXT_PUBLIC_SITE_URL
 interface QuestionResult {
   question_index: number
   declared_option: string
+  option_points: Record<string, number> | null
 }
 
 export default function ProjectorPage() {
@@ -67,6 +68,19 @@ export default function ProjectorPage() {
     ? questionResults.find((r) => r.question_index === gameState.current_question_index)
     : null
 
+  // --- OVERRIDE SCREEN ---
+  if (gameState?.override_mode) {
+    return (
+      <main className="min-h-screen bg-yellow-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-yellow-500 text-xl font-bold uppercase tracking-widest mb-4">Groom is making a call…</p>
+          <p className="text-white font-black tracking-tight" style={{ fontSize: '10rem', lineHeight: 1 }}>OVERRIDE</p>
+          <p className="text-yellow-300 text-2xl mt-6 animate-pulse">Stand by…</p>
+        </div>
+      </main>
+    )
+  }
+
   // --- IDLE SCREEN ---
   if (!gameState || gameState.status === 'waiting') {
     return (
@@ -86,7 +100,6 @@ export default function ProjectorPage() {
 
   // --- RESULTS / LEADERBOARD SCREEN ---
   if (gameState.status === 'results') {
-    const rank1Option = currentQ?.options.find((o) => o.id === currentResult?.declared_option)
     const fmtPts = (g: Guest) => {
       const pts = g.score ?? (g as Record<string, number>).penalty_points ?? 0
       return pts > 0 ? `+${pts}` : String(pts)
@@ -96,21 +109,49 @@ export default function ProjectorPage() {
       return pts < 0 ? 'text-emerald-400' : pts === 0 ? 'text-gray-300' : 'text-rose-400'
     }
 
+    const rankedOptions = currentQ && currentResult?.option_points
+      ? [...currentQ.options].sort((a, b) =>
+          (currentResult.option_points![a.id] ?? 99) - (currentResult.option_points![b.id] ?? 99)
+        )
+      : []
+
+    const ptsBorder = (pts: number) =>
+      pts === -1 ? 'border-emerald-400' : pts === 2 ? 'border-rose-500' : 'border-gray-600'
+    const ptsBg = (pts: number) =>
+      pts === -1 ? 'bg-emerald-800' : pts === 2 ? 'bg-rose-900' : 'bg-gray-800'
+    const ptsLabel = (pts: number) =>
+      pts === -1 ? 'Most Popular' : pts === 0 ? '2nd' : pts === 1 ? '3rd' : 'Least Popular'
+
     return (
-      <main className="min-h-screen bg-gray-950 text-white p-10 flex flex-col">
-        {/* Round winner banner */}
-        {rank1Option && (
-          <div className="text-center mb-6">
-            <p className="text-gray-400 text-sm uppercase tracking-widest mb-1">Most Popular This Round</p>
-            <p className="text-3xl font-bold text-emerald-400">{rank1Option.label} 👑 <span className="text-lg text-emerald-300">(-1 pt)</span></p>
+      <main className="min-h-screen bg-gray-950 text-white p-8 flex flex-col">
+        {/* This round's ranking */}
+        {rankedOptions.length > 0 && currentResult?.option_points && (
+          <div className="mb-8">
+            <p className="text-center text-gray-400 text-sm uppercase tracking-widest mb-4">This Round&apos;s Ranking</p>
+            <div className="grid grid-cols-4 gap-4 max-w-3xl mx-auto">
+              {rankedOptions.map((opt) => {
+                const pts = currentResult.option_points![opt.id] ?? 0
+                return (
+                  <div key={opt.id} className={`rounded-2xl overflow-hidden border-4 ${ptsBorder(pts)}`}>
+                    <div className="relative aspect-square">
+                      <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
+                    </div>
+                    <div className={`p-2 text-center ${ptsBg(pts)}`}>
+                      <p className="font-bold text-sm">{opt.label}</p>
+                      <p className="text-xs text-gray-300">{ptsLabel(pts)} · {pts > 0 ? `+${pts}` : pts} pt</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
 
-        <h1 className="text-4xl font-bold text-center mb-6">🏆 Most Common People</h1>
-        <p className="text-center text-gray-500 text-sm mb-6">Lower score = less common = better!</p>
+        <h1 className="text-3xl font-bold text-center mb-2">🏆 Most Common People</h1>
+        <p className="text-center text-gray-500 text-sm mb-5">Lower score = less common = better!</p>
 
         {guests.length === 0 ? (
-          <p className="text-center text-gray-500 mt-10">Loading scores…</p>
+          <p className="text-center text-gray-500 mt-6">Loading scores…</p>
         ) : (
           <div className="max-w-2xl mx-auto w-full space-y-2">
             {guests.map((g, i) => {

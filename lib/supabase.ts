@@ -26,6 +26,7 @@ export interface GameState {
   id: number
   current_question_index: number
   status: GameStatus
+  override_mode: boolean
 }
 
 export interface Guest {
