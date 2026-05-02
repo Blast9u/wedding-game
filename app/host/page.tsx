@@ -20,7 +20,6 @@ export default function HostPage() {
   const [guests, setGuests] = useState<Guest[]>([])
   const [questionResults, setQuestionResults] = useState<QuestionResult[]>([])
   const [questions, setQuestions] = useState<GameQuestion[]>([])
-  const [overrideOpen, setOverrideOpen] = useState(false)
   const [overrideOrder, setOverrideOrder] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -91,28 +90,16 @@ export default function HostPage() {
     setLoading(false)
   }
 
-  async function handleOpenOverride() {
-    setOverrideOrder([])
-    setOverrideOpen(true)
-    await supabase.from('wedding_game_state').update({ override_mode: true }).eq('id', 1)
-  }
-
-  async function handleCancelOverride() {
-    setOverrideOpen(false)
-    setOverrideOrder([])
-    await supabase.from('wedding_game_state').update({ override_mode: false }).eq('id', 1)
-  }
-
   // picks[0]=most penalized(2pts) … picks[3]=least penalized(-1pt)
-  // RPC force_order: [rank1(-1pt), rank2(0pt), rank3(1pt), rank4(2pt)] = reversed picks
+  // RPC force_order: [rank1(-1pt)…rank4(2pt)] = picks reversed
   async function handleApplyOverride() {
     if (!gameState || overrideOrder.length !== 4) return
     setLoading(true)
+    await supabase.from('wedding_game_state').update({ override_mode: true }).eq('id', 1)
     const forceOrder = [...overrideOrder].reverse()
     await supabase.rpc('apply_question_result', { q_index: gameState.current_question_index, force_order: forceOrder })
-    await supabase.from('wedding_game_state').update({ override_mode: false }).eq('id', 1)
+    await supabase.from('wedding_game_state').update({ override_mode: false, status: 'results' }).eq('id', 1)
     await fetchAll()
-    setOverrideOpen(false)
     setOverrideOrder([])
     setLoading(false)
   }
@@ -207,87 +194,75 @@ export default function HostPage() {
           </button>
         </div>
 
-        {/* ── GROOM OVERRIDE — current question only, available while in results ── */}
+        {/* ── GROOM OVERRIDE — shown during results, rank all 4 options ── */}
         {gameState?.status === 'results' && currentQ && (
           <div className="bg-gray-900 border border-yellow-600/50 rounded-2xl p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h2 className="text-yellow-400 font-bold text-lg">👑 Groom Override</h2>
-                <p className="text-gray-400 text-xs mt-0.5">Q{(gameState.current_question_index) + 1}: {currentQ.text}</p>
-              </div>
-              {!overrideOpen ? (
-                <button
-                  onClick={handleOpenOverride}
-                  className="text-sm bg-yellow-600 hover:bg-yellow-500 text-black font-bold px-4 py-2 rounded-xl transition-colors"
-                >
-                  Override
-                </button>
-              ) : (
-                <button
-                  onClick={handleCancelOverride}
-                  className="text-sm bg-gray-700 hover:bg-gray-600 text-gray-200 font-bold px-4 py-2 rounded-xl transition-colors"
-                >
-                  Cancel
-                </button>
-              )}
+            <h2 className="text-yellow-400 font-bold text-lg mb-1">👑 Groom Override</h2>
+            <p className="text-yellow-300 text-xs mb-1">
+              Tap options in order — 1st tap = most penalized (2 pts) → 4th tap = least penalized (-1 pt)
+            </p>
+            <p className="text-gray-400 text-sm mb-3 font-medium">
+              {overrideOrder.length === 0
+                ? 'Tap your 1st choice (gets +2 pts)'
+                : overrideOrder.length < 4
+                ? `Good — now tap choice #${overrideOrder.length + 1} of 4`
+                : '✅ All ranked! Hit Apply when ready.'}
+            </p>
+
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {currentQ.options.map((opt) => {
+                const pickIndex = overrideOrder.indexOf(opt.id)
+                const isPicked = pickIndex >= 0
+                const rankLabels = ['1st · +2pts', '2nd · +1pt', '3rd · 0pt', '4th · -1pt']
+                const rankColors = ['text-rose-400', 'text-orange-400', 'text-gray-300', 'text-emerald-400']
+                return (
+                  <button
+                    key={opt.id}
+                    disabled={loading}
+                    onClick={() => {
+                      if (isPicked) {
+                        setOverrideOrder(prev => prev.slice(0, pickIndex))
+                      } else if (overrideOrder.length < 4) {
+                        setOverrideOrder(prev => [...prev, opt.id])
+                      }
+                    }}
+                    className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all ${
+                      isPicked ? 'border-yellow-400 brightness-110' : 'border-gray-600 hover:border-yellow-500 hover:brightness-110'
+                    }`}
+                  >
+                    <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
+                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-end pb-1.5">
+                      <span className="text-white text-xs font-bold">{opt.label}</span>
+                      {isPicked && (
+                        <span className={`text-xs font-bold ${rankColors[pickIndex]}`}>{rankLabels[pickIndex]}</span>
+                      )}
+                    </div>
+                    {isPicked && (
+                      <div className="absolute top-1.5 left-1.5 bg-yellow-500 text-black text-xs font-black w-6 h-6 rounded-full flex items-center justify-center">
+                        {pickIndex + 1}
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
             </div>
 
-            {overrideOpen && (
-              <>
-                <p className="text-yellow-300 text-xs mb-1">
-                  Tap in order: 1st = most penalized (2pts) → 4th = least penalized (-1pt)
-                </p>
-                <p className="text-gray-500 text-xs mb-3">
-                  {overrideOrder.length < 4 ? `Pick #${overrideOrder.length + 1} of 4…` : 'All ranked — tap Apply!'}
-                </p>
-                <div className="grid grid-cols-4 gap-2">
-                  {currentQ.options.map((opt) => {
-                    const pickIndex = overrideOrder.indexOf(opt.id)
-                    const isPicked = pickIndex >= 0
-                    const rankLabels = ['1st · 2pts', '2nd · 1pt', '3rd · 0pt', '4th · -1pt']
-                    const rankColors = ['text-rose-400', 'text-orange-400', 'text-gray-300', 'text-emerald-400']
-                    return (
-                      <button
-                        key={opt.id}
-                        disabled={loading}
-                        onClick={() => {
-                          if (isPicked) {
-                            setOverrideOrder(overrideOrder.slice(0, pickIndex))
-                          } else if (overrideOrder.length < 4) {
-                            setOverrideOrder([...overrideOrder, opt.id])
-                          }
-                        }}
-                        className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all ${
-                          isPicked ? 'border-yellow-400 scale-95' : 'border-gray-600 hover:border-yellow-600 hover:scale-105'
-                        }`}
-                      >
-                        <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
-                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-end pb-1">
-                          <span className="text-white text-xs font-bold">{opt.label}</span>
-                          {isPicked && (
-                            <span className={`text-xs font-bold ${rankColors[pickIndex]}`}>{rankLabels[pickIndex]}</span>
-                          )}
-                        </div>
-                        {isPicked && (
-                          <div className="absolute top-1 left-1 bg-yellow-500 text-black text-xs font-black w-5 h-5 rounded-full flex items-center justify-center">
-                            {pickIndex + 1}
-                          </div>
-                        )}
-                      </button>
-                    )
-                  })}
-                </div>
-                {overrideOrder.length === 4 && (
-                  <button
-                    onClick={handleApplyOverride}
-                    disabled={loading}
-                    className="mt-4 w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-3 rounded-xl text-base transition-colors disabled:opacity-50"
-                  >
-                    {loading ? 'Applying…' : '✅ Apply Override'}
-                  </button>
-                )}
-              </>
-            )}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setOverrideOrder([])}
+                disabled={overrideOrder.length === 0 || loading}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 text-gray-200 text-sm font-bold rounded-xl transition-colors"
+              >
+                Reset
+              </button>
+              <button
+                onClick={handleApplyOverride}
+                disabled={overrideOrder.length !== 4 || loading}
+                className="flex-1 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-30 disabled:cursor-not-allowed text-black font-black py-2 rounded-xl text-base transition-colors"
+              >
+                {loading ? 'Applying…' : overrideOrder.length === 4 ? '✅ Apply Override' : `Rank all 4 first (${overrideOrder.length}/4)`}
+              </button>
+            </div>
           </div>
         )}
 
