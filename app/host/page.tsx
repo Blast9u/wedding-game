@@ -95,10 +95,10 @@ export default function HostPage() {
   async function handleApplyOverride() {
     if (!gameState || overrideOrder.length !== 4) return
     setLoading(true)
-    await supabase.from('wedding_game_state').update({ override_mode: true }).eq('id', 1)
     const forceOrder = [...overrideOrder].reverse()
+    await supabase.from('wedding_game_state').update({ status: 'override' }).eq('id', 1)
     await supabase.rpc('apply_question_result', { q_index: gameState.current_question_index, force_order: forceOrder })
-    await supabase.from('wedding_game_state').update({ override_mode: false, status: 'results' }).eq('id', 1)
+    await supabase.from('wedding_game_state').update({ status: 'results' }).eq('id', 1)
     await fetchAll()
     setOverrideOrder([])
     setLoading(false)
@@ -123,6 +123,7 @@ export default function HostPage() {
     voting: 'bg-green-100 text-green-800',
     locked: 'bg-orange-100 text-orange-800',
     results: 'bg-blue-100 text-blue-800',
+    override: 'bg-yellow-400 text-black',
   }
 
   return (

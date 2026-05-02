@@ -69,7 +69,7 @@ export default function ProjectorPage() {
     : null
 
   // --- OVERRIDE SCREEN ---
-  if (gameState?.override_mode) {
+  if (gameState?.status === 'override') {
     return (
       <main className="min-h-screen bg-yellow-950 flex items-center justify-center">
         <div className="text-center">

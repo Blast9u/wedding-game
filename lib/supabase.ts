@@ -20,13 +20,12 @@ export const supabase = new Proxy({} as SupabaseClient, {
   },
 })
 
-export type GameStatus = 'waiting' | 'voting' | 'locked' | 'results'
+export type GameStatus = 'waiting' | 'voting' | 'locked' | 'results' | 'override'
 
 export interface GameState {
   id: number
   current_question_index: number
   status: GameStatus
-  override_mode: boolean
 }
 
 export interface Guest {
