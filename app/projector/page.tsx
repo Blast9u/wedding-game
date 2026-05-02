@@ -57,7 +57,7 @@ export default function ProjectorPage() {
   }
 
   async function fetchGuests() {
-    const { data } = await supabase.from('wedding_guests').select('*').order('penalty_points', { ascending: false })
+    const { data } = await supabase.from('wedding_guests').select('*').order('penalty_points', { ascending: true })
     setGuests(data ?? [])
   }
 
@@ -100,36 +100,50 @@ export default function ProjectorPage() {
 
   // --- RESULTS / LEADERBOARD SCREEN ---
   if (gameState.status === 'results') {
+    // Sorted ascending: lowest score = best (index 0 = winner)
     const top3 = guests.slice(0, 3)
     const rest = guests.slice(3)
-    const topPenalty = guests[0]?.penalty_points ?? 0
-    const declaredLoser = currentQ?.options.find((o) => o.id === currentResult?.declared_option)
+    const rank1Option = currentQ?.options.find((o) => o.id === currentResult?.declared_option)
+
+    const scoreColor = (pts: number) =>
+      pts < 0 ? 'text-emerald-400' : pts === 0 ? 'text-gray-300' : 'text-rose-400'
+    const fmtPts = (pts: number) => (pts > 0 ? `+${pts}` : String(pts))
 
     return (
       <main className="min-h-screen bg-gray-950 text-white p-10">
         <h1 className="text-4xl font-bold text-center mb-2">🏆 Leaderboard</h1>
-        <p className="text-center text-gray-400 mb-8">
-          Question {gameState.current_question_index + 1} —{' '}
-          {declaredLoser
-            ? <>Losing option: <span className="text-rose-400 font-bold">{declaredLoser.label}</span></>
-            : 'Calculating…'
-          }
-        </p>
+
+        {/* Scoring legend for this round */}
+        {currentQ && currentResult?.declared_option && (
+          <div className="flex justify-center gap-3 mb-6 flex-wrap">
+            {currentQ.options.map((opt, i) => {
+              const rankPts = [-1, 0, 1, 2]
+              // Find actual rank of this option based on declared_option being rank1
+              const rank = opt.id === currentResult.declared_option ? 0
+                : i  // rough — just show the scale
+              return null // skip per-option display, show scale instead
+            })}
+            <span className="bg-gray-800 rounded-xl px-3 py-1.5 text-sm">Most popular: <span className="text-emerald-400 font-bold">-1 pt</span></span>
+            <span className="bg-gray-800 rounded-xl px-3 py-1.5 text-sm">2nd: <span className="text-gray-300 font-bold">0 pt</span></span>
+            <span className="bg-gray-800 rounded-xl px-3 py-1.5 text-sm">3rd: <span className="text-orange-400 font-bold">+1 pt</span></span>
+            <span className="bg-gray-800 rounded-xl px-3 py-1.5 text-sm">Least popular: <span className="text-rose-400 font-bold">+2 pt</span></span>
+          </div>
+        )}
 
         {/* Top 3 podium */}
         <div className="flex items-end justify-center gap-6 mb-8">
           {top3.map((g, i) => {
             const medals = ['🥇', '🥈', '🥉']
             const heights = ['h-40', 'h-32', 'h-24']
-            const colors = ['bg-yellow-500', 'bg-gray-400', 'bg-amber-700']
+            const colors = ['bg-emerald-600', 'bg-gray-500', 'bg-gray-600']
             return (
               <div key={g.id} className="flex flex-col items-center">
                 <p className="text-xl mb-1">{medals[i]}</p>
                 <p className="font-bold text-lg">{g.name}</p>
                 <p className="text-sm text-gray-400 mb-2">Table {g.table_number}</p>
                 <div className={`${heights[i]} ${colors[i]} w-24 rounded-t-xl flex items-end justify-center pb-2`}>
-                  <span className={`font-black text-2xl ${g.penalty_points === topPenalty ? 'text-rose-200' : ''}`}>
-                    {g.penalty_points}
+                  <span className={`font-black text-2xl ${scoreColor(g.penalty_points)}`}>
+                    {fmtPts(g.penalty_points)}
                   </span>
                 </div>
               </div>
@@ -143,7 +157,7 @@ export default function ProjectorPage() {
               <div key={g.id} className="flex items-center justify-between bg-gray-800 rounded-xl px-4 py-2">
                 <span className="text-gray-400 mr-3">#{i + 4}</span>
                 <span className="flex-1">{g.name} <span className="text-gray-500 text-sm">· Table {g.table_number}</span></span>
-                <span className="font-bold text-rose-400">{g.penalty_points} pts</span>
+                <span className={`font-bold ${scoreColor(g.penalty_points)}`}>{fmtPts(g.penalty_points)} pts</span>
               </div>
             ))}
           </div>

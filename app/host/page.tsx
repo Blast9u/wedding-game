@@ -46,7 +46,7 @@ export default function HostPage() {
   }
 
   async function fetchGuests() {
-    const { data } = await supabase.from('wedding_guests').select('*').order('penalty_points', { ascending: false })
+    const { data } = await supabase.from('wedding_guests').select('*').order('penalty_points', { ascending: true })
     if (data) { setGuests(data); setGuestCount(data.length) }
   }
 
@@ -85,14 +85,14 @@ export default function HostPage() {
   async function handleCalculateMajority() {
     if (!gameState) return
     setLoading(true)
-    await supabase.rpc('calculate_majority_and_penalise', { q_index: gameState.current_question_index })
+    await supabase.rpc('apply_question_result', { q_index: gameState.current_question_index })
     await updateGameState({ status: 'results' })
     setLoading(false)
   }
 
-  async function handleOverride(qIndex: number, chosenOption: string) {
+  async function handleOverride(qIndex: number, rank1Option: string) {
     setLoading(true)
-    await supabase.rpc('set_question_result', { q_index: qIndex, chosen_option: chosenOption })
+    await supabase.rpc('apply_question_result', { q_index: qIndex, force_rank1: rank1Option })
     await fetchAll()
     setOverrideTarget(null)
     setLoading(false)
@@ -197,7 +197,7 @@ export default function HostPage() {
             <div>
               <h2 className="text-yellow-400 font-bold text-lg">👑 Groom Override</h2>
               <p className="text-gray-400 text-sm mt-0.5">
-                Pick any settled question and declare a different losing option. Penalties auto-adjust.
+                Pick any settled question and declare a different rank 1 winner (-1 pt). Scores auto-adjust.
               </p>
             </div>
 
@@ -214,7 +214,7 @@ export default function HostPage() {
                       <p className="text-xs text-gray-400 mb-0.5">Q{q.question_index + 1}</p>
                       <p className="text-sm font-medium leading-tight">{q.text}</p>
                       <p className="text-xs mt-1">
-                        Current loser: <span className="text-rose-400 font-bold">{currentLoser?.label ?? '—'}</span>
+                        Rank 1 winner (-1 pt): <span className="text-emerald-400 font-bold">{currentLoser?.label ?? '—'}</span>
                       </p>
                     </div>
                     <button
@@ -229,7 +229,7 @@ export default function HostPage() {
                   {isExpanded && (
                     <div className="p-4 bg-yellow-950/40">
                       <p className="text-yellow-300 text-xs font-medium mb-3">
-                        Tap the option you want declared as the loser — old penalties will be reversed first.
+                        Tap the option to crown as rank 1 winner (-1 pt). Scores for all options will recalculate.
                       </p>
                       <div className="grid grid-cols-4 gap-2">
                         {q.options.map((opt) => {
@@ -248,7 +248,7 @@ export default function HostPage() {
                               <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
                               <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-end pb-1">
                                 <span className="text-white text-xs font-bold">{opt.label}</span>
-                                {isCurrent && <span className="text-rose-400 text-xs">current</span>}
+                                {isCurrent && <span className="text-emerald-400 text-xs">rank 1 ✓</span>}
                               </div>
                             </button>
                           )

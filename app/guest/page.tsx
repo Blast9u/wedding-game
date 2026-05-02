@@ -47,6 +47,16 @@ export default function GuestPage() {
         }
       })
 
+    // Subscribe to own guest record for live score updates
+    const guestChannel = supabase
+      .channel('guest-score')
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'wedding_guests', filter: `id=eq.${guest.id}` },
+        (payload) => setGuest(payload.new as Guest)
+      )
+      .subscribe()
+
     const channel = supabase
       .channel('game-state-guest')
       .on(
@@ -74,7 +84,7 @@ export default function GuestPage() {
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    return () => { supabase.removeChannel(channel); supabase.removeChannel(guestChannel) }
   }, [guest, myVotes, syncScreen])
 
   async function handleLogin(e: React.FormEvent) {
@@ -160,14 +170,35 @@ export default function GuestPage() {
   }
 
   if (screen === 'waiting') {
+    const pts = guest?.penalty_points ?? 0
     return (
-      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center p-4">
+      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex flex-col items-center justify-center p-6 gap-6">
+        {/* Name + table */}
         <div className="text-center">
-          <div className="text-6xl mb-4 animate-bounce">⏳</div>
-          <h2 className="text-2xl font-bold text-rose-700">Welcome, {guest?.name}!</h2>
-          <p className="text-gray-600 mt-2">Table {guest?.table_number}</p>
-          <p className="text-gray-500 mt-6">Waiting for the host to start…</p>
-          <div className="mt-4 flex gap-1 justify-center">
+          <div className="text-5xl mb-3">💍</div>
+          <h2 className="text-2xl font-bold text-rose-700">{guest?.name}</h2>
+          <p className="text-gray-500 text-sm mt-1">Table {guest?.table_number}</p>
+        </div>
+
+        {/* Live score card */}
+        <div className="bg-white rounded-3xl shadow-lg px-10 py-6 text-center w-full max-w-xs">
+          <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Your Score</p>
+          <p className={`text-5xl font-black ${pts < 0 ? 'text-emerald-500' : pts === 0 ? 'text-gray-400' : 'text-rose-600'}`}>
+            {pts > 0 ? `+${pts}` : pts}
+          </p>
+          <p className="text-xs text-gray-400 mt-1">pts</p>
+        </div>
+
+        {/* Catchphrase */}
+        <div className="bg-rose-600 text-white rounded-2xl px-6 py-4 text-center max-w-xs shadow-lg">
+          <p className="font-bold text-lg leading-snug">Don't lah be so Common!</p>
+          <p className="text-rose-200 text-xs mt-1">Stand out, or pay the price 😬</p>
+        </div>
+
+        {/* Waiting indicator */}
+        <div className="text-center">
+          <p className="text-gray-400 text-sm">Waiting for host to start…</p>
+          <div className="mt-2 flex gap-1 justify-center">
             {[0,1,2].map((i) => (
               <div key={i} className="w-2 h-2 rounded-full bg-rose-400 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
             ))}
@@ -217,14 +248,19 @@ export default function GuestPage() {
   }
 
   if (screen === 'voted') {
+    const pts = guest?.penalty_points ?? 0
     return (
-      <main className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="text-6xl mb-4">✅</div>
-          <h2 className="text-2xl font-bold">Vote Cast!</h2>
-          <p className="text-gray-400 mt-2">Waiting for others…</p>
-          <p className="text-sm text-rose-400 mt-6">🤞 Hope you didn&apos;t pick the majority!</p>
+      <main className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4 gap-5">
+        <div className="text-6xl">✅</div>
+        <h2 className="text-2xl font-bold">Vote Cast!</h2>
+        <p className="text-gray-400">Waiting for others…</p>
+        <div className="bg-gray-800 rounded-2xl px-10 py-5 text-center">
+          <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Your Score</p>
+          <p className={`text-5xl font-black ${pts < 0 ? 'text-emerald-400' : pts === 0 ? 'text-gray-400' : 'text-rose-400'}`}>
+            {pts > 0 ? `+${pts}` : pts}
+          </p>
         </div>
+        <p className="text-sm text-rose-400">Don&apos;t lah be so Common!</p>
       </main>
     )
   }
