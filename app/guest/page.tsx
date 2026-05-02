@@ -54,6 +54,15 @@ export default function GuestPage() {
         { event: 'UPDATE', schema: 'public', table: 'wedding_game_state', filter: 'id=eq.1' },
         (payload) => {
           const gs = payload.new as GameState
+          // Game was reset — clear session so guest re-registers with a fresh DB record
+          if (gs.status === 'waiting' && gs.current_question_index === 0) {
+            setGuest(null)
+            setMyVotes({})
+            setSelectedOption(null)
+            setGameState(null)
+            setScreen('login')
+            return
+          }
           setGameState(gs)
           setSelectedOption(null)
           setMyVotes((prev) => {
