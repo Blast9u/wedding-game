@@ -96,7 +96,9 @@ export default function HostPage() {
     if (!gameState || overrideOrder.length !== 4) return
     setLoading(true)
     const forceOrder = [...overrideOrder].reverse()
+    // Show OVERRIDE on projector, wait 3s for drama before calculating
     await supabase.from('wedding_game_state').update({ status: 'override' }).eq('id', 1)
+    await new Promise(r => setTimeout(r, 3000))
     await supabase.rpc('apply_question_result', { q_index: gameState.current_question_index, force_order: forceOrder })
     await supabase.from('wedding_game_state').update({ status: 'results' }).eq('id', 1)
     await fetchAll()
@@ -196,7 +198,7 @@ export default function HostPage() {
         </div>
 
         {/* ── GROOM OVERRIDE — shown during results, rank all 4 options ── */}
-        {gameState?.status === 'results' && currentQ && (
+        {gameState?.status === 'results' && (
           <div className="bg-gray-900 border border-yellow-600/50 rounded-2xl p-5">
             <h2 className="text-yellow-400 font-bold text-lg mb-1">👑 Groom Override</h2>
             <p className="text-yellow-300 text-xs mb-1">
@@ -210,8 +212,9 @@ export default function HostPage() {
                 : '✅ All ranked! Hit Apply when ready.'}
             </p>
 
+            {!currentQ && <p className="text-gray-500 text-sm py-4 text-center">Loading question…</p>}
             <div className="grid grid-cols-4 gap-2 mb-4">
-              {currentQ.options.map((opt) => {
+              {(currentQ?.options ?? []).map((opt) => {
                 const pickIndex = overrideOrder.indexOf(opt.id)
                 const isPicked = pickIndex >= 0
                 const rankLabels = ['1st · +2pts', '2nd · +1pt', '3rd · 0pt', '4th · -1pt']
