@@ -32,7 +32,7 @@ export interface Guest {
   id: string
   name: string
   table_number: number
-  penalty_points: number
+  score: number
 }
 
 export interface Vote {

@@ -170,7 +170,7 @@ export default function GuestPage() {
   }
 
   if (screen === 'waiting') {
-    const pts = guest?.penalty_points ?? 0
+    const pts = guest?.score ?? 0
     return (
       <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex flex-col items-center justify-center p-6 gap-6">
         {/* Name + table */}
@@ -248,7 +248,7 @@ export default function GuestPage() {
   }
 
   if (screen === 'voted') {
-    const pts = guest?.penalty_points ?? 0
+    const pts = guest?.score ?? 0
     return (
       <main className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4 gap-5">
         <div className="text-6xl">✅</div>
@@ -273,7 +273,7 @@ export default function GuestPage() {
           <h2 className="text-2xl font-bold">Results are in!</h2>
           <p className="text-gray-400 mt-2">Check the big screen for the reveal.</p>
           <p className="text-sm text-gray-500 mt-1">
-            Your penalty points: <span className="text-rose-400 font-bold">{guest?.penalty_points ?? 0}</span>
+            Your penalty points: <span className="text-rose-400 font-bold">{guest?.score ?? 0}</span>
           </p>
         </div>
       </main>

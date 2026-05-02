@@ -46,7 +46,7 @@ export default function HostPage() {
   }
 
   async function fetchGuests() {
-    const { data } = await supabase.from('wedding_guests').select('*').order('penalty_points', { ascending: true })
+    const { data } = await supabase.from('wedding_guests').select('*').order('score', { ascending: true })
     if (data) { setGuests(data); setGuestCount(data.length) }
   }
 
@@ -275,8 +275,8 @@ export default function HostPage() {
                     <span className="text-gray-500 mr-2">#{i + 1}</span>
                     {g.name} <span className="text-gray-500">· Table {g.table_number}</span>
                   </span>
-                  <span className={`font-bold ${g.penalty_points > 0 ? 'text-rose-400' : 'text-gray-500'}`}>
-                    {g.penalty_points} pts
+                  <span className={`font-bold ${g.score > 0 ? 'text-rose-400' : 'text-gray-500'}`}>
+                    {g.score} pts
                   </span>
                 </div>
               ))}
