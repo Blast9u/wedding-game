@@ -74,7 +74,8 @@ export default function ProjectorPage() {
       <main className="min-h-screen bg-yellow-950 flex items-center justify-center">
         <div className="text-center">
           <p className="text-yellow-500 text-xl font-bold uppercase tracking-widest mb-4">Groom is making a call…</p>
-          <p className="text-white font-black tracking-tight" style={{ fontSize: '10rem', lineHeight: 1 }}>OVERRIDE</p>
+          <div style={{ fontSize: '8rem', lineHeight: 1 }} className="mb-2">💥</div>
+          <p className="text-white font-black tracking-tight" style={{ fontSize: '9rem', lineHeight: 1 }}>OVERRIDE</p>
           <p className="text-yellow-300 text-2xl mt-6 animate-pulse">Stand by…</p>
         </div>
       </main>

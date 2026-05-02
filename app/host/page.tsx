@@ -92,13 +92,17 @@ export default function HostPage() {
 
   // picks[0]=most penalized(2pts) … picks[3]=least penalized(-1pt)
   // RPC force_order: [rank1(-1pt)…rank4(2pt)] = picks reversed
+  async function handleAnnounceOverride() {
+    setLoading(true)
+    await supabase.from('wedding_game_state').update({ status: 'override' }).eq('id', 1)
+    await fetchGameState()
+    setLoading(false)
+  }
+
   async function handleApplyOverride() {
     if (!gameState || overrideOrder.length !== 4) return
     setLoading(true)
     const forceOrder = [...overrideOrder].reverse()
-    // Show OVERRIDE on projector, wait 3s for drama before calculating
-    await supabase.from('wedding_game_state').update({ status: 'override' }).eq('id', 1)
-    await new Promise(r => setTimeout(r, 3000))
     await supabase.rpc('apply_question_result', { q_index: gameState.current_question_index, force_order: forceOrder })
     await supabase.from('wedding_game_state').update({ status: 'results' }).eq('id', 1)
     await fetchAll()
@@ -197,10 +201,23 @@ export default function HostPage() {
           </button>
         </div>
 
-        {/* ── GROOM OVERRIDE — shown during results, rank all 4 options ── */}
+        {/* ── GROOM OVERRIDE ── */}
+
+        {/* Step 1: Announce button — shown during results before override is triggered */}
         {gameState?.status === 'results' && (
-          <div className="bg-gray-900 border border-yellow-600/50 rounded-2xl p-5">
-            <h2 className="text-yellow-400 font-bold text-lg mb-1">👑 Groom Override</h2>
+          <button
+            onClick={handleAnnounceOverride}
+            disabled={loading}
+            className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 text-black font-black py-4 rounded-2xl text-lg transition-colors"
+          >
+            💥 Groom Override!
+          </button>
+        )}
+
+        {/* Step 2: Ranking UI — shown while projector is on OVERRIDE screen */}
+        {gameState?.status === 'override' && (
+          <div className="bg-gray-900 border border-yellow-500 rounded-2xl p-5">
+            <h2 className="text-yellow-400 font-bold text-lg mb-1">👑 Rank the Options</h2>
             <p className="text-yellow-300 text-xs mb-1">
               Tap options in order — 1st tap = most penalized (2 pts) → 4th tap = least penalized (-1 pt)
             </p>
