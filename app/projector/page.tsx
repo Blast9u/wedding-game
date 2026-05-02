@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import { QRCodeCanvas as QRCode } from 'qrcode.react'
 import { supabase, GameState, Guest, Vote } from '@/lib/supabase'
-import { QUESTIONS } from '@/lib/constants'
+import { fetchQuestions, GameQuestion } from '@/lib/questions'
 
 const GUEST_URL = process.env.NEXT_PUBLIC_SITE_URL
   ? `${process.env.NEXT_PUBLIC_SITE_URL}/guest`
@@ -23,8 +23,10 @@ export default function ProjectorPage() {
   const [votes, setVotes] = useState<Vote[]>([])
   const [guests, setGuests] = useState<Guest[]>([])
   const [questionResults, setQuestionResults] = useState<QuestionResult[]>([])
+  const [questions, setQuestions] = useState<GameQuestion[]>([])
 
   useEffect(() => {
+    fetchQuestions().then(setQuestions)
     fetchAll()
     const channel = supabase
       .channel('projector-realtime')
@@ -64,7 +66,7 @@ export default function ProjectorPage() {
     if (data) setQuestionResults(data)
   }
 
-  const currentQ = gameState ? QUESTIONS[gameState.current_question_index] : null
+  const currentQ = gameState ? questions[gameState.current_question_index] : null
   const chartData = currentQ
     ? currentQ.options.map((opt) => ({
         name: opt.label,
@@ -177,7 +179,7 @@ export default function ProjectorPage() {
                 }`}
               >
                 <div className="relative flex-1 min-h-48">
-                  <Image src={opt.image} alt={opt.label} fill className="object-cover" unoptimized />
+                  <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
                   {isMajority && (
                     <div className="absolute inset-0 bg-rose-600/30 flex items-center justify-center">
                       <span className="text-4xl">😬</span>

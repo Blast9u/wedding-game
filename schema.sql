@@ -96,8 +96,30 @@ begin
 end;
 $$;
 
--- Enable Realtime
-alter publication supabase_realtime add table wedding_game_state;
-alter publication supabase_realtime add table wedding_votes;
-alter publication supabase_realtime add table wedding_guests;
-alter publication supabase_realtime add table wedding_question_results;
+-- Questions table (editable from /host/setup UI)
+create table if not exists wedding_questions (
+  question_index int primary key,
+  text text not null,
+  options jsonb not null default '[]'
+);
+
+-- Enable Realtime (safe to re-run — ignores if already a member)
+do $$ begin
+  alter publication supabase_realtime add table wedding_game_state;
+exception when others then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table wedding_votes;
+exception when others then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table wedding_guests;
+exception when others then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table wedding_question_results;
+exception when others then null; end $$;
+do $$ begin
+  alter publication supabase_realtime add table wedding_questions;
+exception when others then null; end $$;
+
+-- Storage bucket for wedding images
+-- Go to Supabase Dashboard > Storage > New bucket
+-- Name: wedding-images, Public: ON

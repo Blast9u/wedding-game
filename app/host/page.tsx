@@ -5,7 +5,8 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { supabase, GameState, Guest } from '@/lib/supabase'
-import { QUESTIONS, TOTAL_QUESTIONS } from '@/lib/constants'
+import { fetchQuestions, GameQuestion } from '@/lib/questions'
+import Link from 'next/link'
 
 interface QuestionResult {
   question_index: number
@@ -18,10 +19,12 @@ export default function HostPage() {
   const [voteCount, setVoteCount] = useState(0)
   const [guests, setGuests] = useState<Guest[]>([])
   const [questionResults, setQuestionResults] = useState<QuestionResult[]>([])
-  const [overrideTarget, setOverrideTarget] = useState<number | null>(null) // which q index is being overridden
+  const [questions, setQuestions] = useState<GameQuestion[]>([])
+  const [overrideTarget, setOverrideTarget] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    fetchQuestions().then(setQuestions)
     fetchAll()
     const channel = supabase
       .channel('host-realtime')
@@ -102,10 +105,10 @@ export default function HostPage() {
     setLoading(false)
   }
 
-  const currentQ = gameState ? QUESTIONS[gameState.current_question_index] : null
-  const isLastQuestion = gameState ? gameState.current_question_index >= TOTAL_QUESTIONS - 1 : false
-  const settledQuestions = QUESTIONS.filter(
-    (q) => questionResults.some((r) => r.question_index === q.index)
+  const currentQ = gameState ? questions[gameState.current_question_index] : null
+  const isLastQuestion = gameState ? gameState.current_question_index >= questions.length - 1 : false
+  const settledQuestions = questions.filter(
+    (q) => questionResults.some((r) => r.question_index === q.question_index)
   )
 
   const statusColor: Record<string, string> = {
@@ -125,9 +128,14 @@ export default function HostPage() {
             <h1 className="text-3xl font-bold">🎙️ Host Dashboard</h1>
             <p className="text-gray-400 text-sm mt-1">Majority Loses — Wedding Game</p>
           </div>
-          <button onClick={handleResetGame} disabled={loading} className="text-xs bg-red-900 hover:bg-red-700 text-red-200 px-3 py-1.5 rounded-lg transition-colors">
-            Reset Game
-          </button>
+          <div className="flex gap-2">
+            <Link href="/host/setup" className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg transition-colors font-medium">
+              🛠️ Setup Questions
+            </Link>
+            <button onClick={handleResetGame} disabled={loading} className="text-xs bg-red-900 hover:bg-red-700 text-red-200 px-3 py-1.5 rounded-lg transition-colors">
+              Reset Game
+            </button>
+          </div>
         </div>
 
         {/* Status strip */}
@@ -150,7 +158,7 @@ export default function HostPage() {
 
         {/* Current question */}
         <div className="bg-gray-800 rounded-2xl p-5">
-          <p className="text-gray-400 text-sm mb-1">Question {(gameState?.current_question_index ?? 0) + 1} of {TOTAL_QUESTIONS}</p>
+          <p className="text-gray-400 text-sm mb-1">Question {(gameState?.current_question_index ?? 0) + 1} of {questions.length}</p>
           <p className="text-lg font-semibold">{currentQ?.text}</p>
         </div>
 
@@ -190,23 +198,23 @@ export default function HostPage() {
             </div>
 
             {settledQuestions.map((q) => {
-              const result = questionResults.find((r) => r.question_index === q.index)
+              const result = questionResults.find((r) => r.question_index === q.question_index)
               const currentLoser = q.options.find((o) => o.id === result?.declared_option)
-              const isExpanded = overrideTarget === q.index
+              const isExpanded = overrideTarget === q.question_index
 
               return (
-                <div key={q.index} className="border border-gray-700 rounded-xl overflow-hidden">
+                <div key={q.question_index} className="border border-gray-700 rounded-xl overflow-hidden">
                   {/* Question row */}
                   <div className="flex items-center justify-between px-4 py-3 bg-gray-800">
                     <div>
-                      <p className="text-xs text-gray-400 mb-0.5">Q{q.index + 1}</p>
+                      <p className="text-xs text-gray-400 mb-0.5">Q{q.question_index + 1}</p>
                       <p className="text-sm font-medium leading-tight">{q.text}</p>
                       <p className="text-xs mt-1">
                         Current loser: <span className="text-rose-400 font-bold">{currentLoser?.label ?? '—'}</span>
                       </p>
                     </div>
                     <button
-                      onClick={() => setOverrideTarget(isExpanded ? null : q.index)}
+                      onClick={() => setOverrideTarget(isExpanded ? null : q.question_index)}
                       className="ml-4 shrink-0 text-xs bg-yellow-600 hover:bg-yellow-500 text-black font-bold px-3 py-1.5 rounded-lg transition-colors"
                     >
                       {isExpanded ? 'Cancel' : 'Override'}
@@ -225,7 +233,7 @@ export default function HostPage() {
                           return (
                             <button
                               key={opt.id}
-                              onClick={() => handleOverride(q.index, opt.id)}
+                              onClick={() => handleOverride(q.question_index, opt.id)}
                               disabled={loading || isCurrent}
                               className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all disabled:cursor-not-allowed ${
                                 isCurrent
@@ -233,7 +241,7 @@ export default function HostPage() {
                                   : 'border-yellow-600 hover:border-yellow-300 hover:scale-105'
                               }`}
                             >
-                              <Image src={opt.image} alt={opt.label} fill className="object-cover" unoptimized />
+                              <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
                               <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-end pb-1">
                                 <span className="text-white text-xs font-bold">{opt.label}</span>
                                 {isCurrent && <span className="text-rose-400 text-xs">current</span>}

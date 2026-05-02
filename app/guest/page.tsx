@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { supabase, GameState, Guest } from '@/lib/supabase'
-import { QUESTIONS } from '@/lib/constants'
+import { fetchQuestions, GameQuestion } from '@/lib/questions'
 
 type Screen = 'login' | 'waiting' | 'voting' | 'voted' | 'results'
 
@@ -15,9 +15,12 @@ export default function GuestPage() {
   const [tableNumber, setTableNumber] = useState(1)
   const [guest, setGuest] = useState<Guest | null>(null)
   const [gameState, setGameState] = useState<GameState | null>(null)
+  const [questions, setQuestions] = useState<GameQuestion[]>([])
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [myVotes, setMyVotes] = useState<Record<number, string>>({})
   const [error, setError] = useState('')
+
+  useEffect(() => { fetchQuestions().then(setQuestions) }, [])
 
   const syncScreen = useCallback((gs: GameState, hasVoted: boolean) => {
     if (gs.status === 'waiting') setScreen('waiting')
@@ -101,7 +104,7 @@ export default function GuestPage() {
     setScreen('voted')
   }
 
-  const currentQ = gameState ? QUESTIONS[gameState.current_question_index] : null
+  const currentQ = gameState ? questions[gameState.current_question_index] : null
 
   if (screen === 'login') {
     return (
@@ -186,7 +189,7 @@ export default function GuestPage() {
                 }`}
               >
                 <Image
-                  src={opt.image}
+                  src={opt.image_url}
                   alt={opt.label}
                   fill
                   className="object-cover"
