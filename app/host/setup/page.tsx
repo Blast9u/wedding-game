@@ -34,6 +34,7 @@ function SortableQuestion({
   onTextChange,
   onLabelChange,
   onImageUpload,
+  onDelete,
 }: {
   q: GameQuestion
   displayIndex: number
@@ -41,6 +42,7 @@ function SortableQuestion({
   onTextChange: (qIndex: number, text: string) => void
   onLabelChange: (qIndex: number, optId: string, label: string) => void
   onImageUpload: (qIndex: number, optId: string, file: File) => void
+  onDelete: (qIndex: number) => void
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: q.question_index })
@@ -77,6 +79,14 @@ function SortableQuestion({
           onChange={(e) => onTextChange(q.question_index, e.target.value)}
           placeholder="Question text…"
         />
+
+        <button
+          onClick={() => onDelete(q.question_index)}
+          className="mt-2 shrink-0 text-gray-600 hover:text-red-400 transition-colors text-lg leading-none"
+          title="Delete question"
+        >
+          ✕
+        </button>
       </div>
 
       {/* Options grid */}
@@ -159,6 +169,26 @@ export default function SetupPage() {
     })
   }
 
+  function addQuestion() {
+    const nextIndex = questions.length > 0
+      ? Math.max(...questions.map((q) => q.question_index)) + 1
+      : 0
+    setQuestions((prev) => [...prev, {
+      question_index: nextIndex,
+      text: '',
+      options: [
+        { id: 'a', label: 'Option A', image_url: '' },
+        { id: 'b', label: 'Option B', image_url: '' },
+        { id: 'c', label: 'Option C', image_url: '' },
+        { id: 'd', label: 'Option D', image_url: '' },
+      ],
+    }])
+  }
+
+  function deleteQuestion(qIndex: number) {
+    setQuestions((prev) => prev.filter((q) => q.question_index !== qIndex))
+  }
+
   function updateText(qIndex: number, text: string) {
     setQuestions((prev) => prev.map((q) => (q.question_index === qIndex ? { ...q, text } : q)))
   }
@@ -200,18 +230,19 @@ export default function SetupPage() {
   async function handleSave() {
     setSaving(true)
     setError('')
-    // Reassign question_index based on current display order before saving
     const ordered = questions.map((q, i) => ({ ...q, question_index: i }))
-    const { error: dbErr } = await supabase.from('wedding_questions').upsert(
-      ordered.map((q) => ({ question_index: q.question_index, text: q.text, options: q.options }))
-    )
-    if (dbErr) {
-      setError('Save failed: ' + dbErr.message)
-    } else {
-      setQuestions(ordered)
-      setFlashSaved(true)
-      setTimeout(() => setFlashSaved(false), 2500)
+    // Delete all then reinsert so removed questions are cleaned up
+    const { error: delErr } = await supabase.from('wedding_questions').delete().gte('question_index', 0)
+    if (delErr) { setError('Save failed: ' + delErr.message); setSaving(false); return }
+    if (ordered.length > 0) {
+      const { error: dbErr } = await supabase.from('wedding_questions').insert(
+        ordered.map((q) => ({ question_index: q.question_index, text: q.text, options: q.options }))
+      )
+      if (dbErr) { setError('Save failed: ' + dbErr.message); setSaving(false); return }
     }
+    setQuestions(ordered)
+    setFlashSaved(true)
+    setTimeout(() => setFlashSaved(false), 2500)
     setSaving(false)
   }
 
@@ -258,11 +289,19 @@ export default function SetupPage() {
                   onTextChange={updateText}
                   onLabelChange={updateLabel}
                   onImageUpload={handleImageUpload}
+                  onDelete={deleteQuestion}
                 />
               ))}
             </div>
           </SortableContext>
         </DndContext>
+
+        <button
+          onClick={addQuestion}
+          className="w-full bg-indigo-700 hover:bg-indigo-600 text-white font-bold py-4 rounded-2xl text-lg transition-colors"
+        >
+          ➕ Add Question
+        </button>
 
         <button
           onClick={handleSave}
