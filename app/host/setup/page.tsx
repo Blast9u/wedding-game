@@ -56,11 +56,12 @@ export default function SetupPage() {
     }
 
     const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path)
+    const cacheBustedUrl = `${publicUrl}?t=${Date.now()}`
 
     setQuestions((prev) =>
       prev.map((q) =>
         q.question_index === qIndex
-          ? { ...q, options: q.options.map((o) => (o.id === optId ? { ...o, image_url: publicUrl } : o)) }
+          ? { ...q, options: q.options.map((o) => (o.id === optId ? { ...o, image_url: cacheBustedUrl } : o)) }
           : q
       )
     )
