@@ -71,7 +71,11 @@ export default function HostPage() {
 
   async function handleNextQuestion() {
     if (!gameState) return
-    await updateGameState({ current_question_index: gameState.current_question_index + 1, status: 'voting' })
+    // From waiting: start Q1 without incrementing. From results: advance to next question.
+    const nextIndex = gameState.status === 'waiting'
+      ? gameState.current_question_index
+      : gameState.current_question_index + 1
+    await updateGameState({ current_question_index: nextIndex, status: 'voting' })
   }
 
   async function handleLockVotes() {
@@ -166,10 +170,10 @@ export default function HostPage() {
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={handleNextQuestion}
-            disabled={loading || gameState?.status === 'voting' || isLastQuestion}
+            disabled={loading || gameState?.status === 'voting' || gameState?.status === 'locked' || isLastQuestion && gameState?.status !== 'waiting'}
             className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl text-lg transition-colors"
           >
-            {isLastQuestion ? '✅ Last Question Done' : '▶️ Push Next Question'}
+            {isLastQuestion ? '✅ Last Question Done' : gameState?.status === 'waiting' ? '🚀 Start Game' : '▶️ Next Question'}
           </button>
           <button
             onClick={handleLockVotes}
