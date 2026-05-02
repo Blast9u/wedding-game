@@ -101,11 +101,11 @@ export default function ProjectorPage() {
   // --- RESULTS / LEADERBOARD SCREEN ---
   if (gameState.status === 'results') {
     const fmtPts = (g: Guest) => {
-      const pts = g.score ?? (g as Record<string, number>).penalty_points ?? 0
+      const pts = g.score ?? (g as unknown as Record<string, number>).penalty_points ?? 0
       return pts > 0 ? `+${pts}` : String(pts)
     }
     const scoreColor = (g: Guest) => {
-      const pts = g.score ?? (g as Record<string, number>).penalty_points ?? 0
+      const pts = g.score ?? (g as unknown as Record<string, number>).penalty_points ?? 0
       return pts < 0 ? 'text-emerald-400' : pts === 0 ? 'text-gray-300' : 'text-rose-400'
     }
 
