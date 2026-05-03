@@ -23,6 +23,7 @@ export default function ProjectorPage() {
   const [guests, setGuests] = useState<Guest[]>([])
   const [questionResults, setQuestionResults] = useState<QuestionResult[]>([])
   const [questions, setQuestions] = useState<GameQuestion[]>([])
+  const [countdown, setCountdown] = useState<number | null>(null)
 
   useEffect(() => {
     fetchQuestions().then(setQuestions)
@@ -40,6 +41,19 @@ export default function ProjectorPage() {
       .subscribe()
     return () => { clearInterval(poll); supabase.removeChannel(channel) }
   }, [])
+
+  // Countdown — resets on each new voting round, stops at 0, host still locks manually
+  useEffect(() => {
+    if (gameState?.status !== 'voting') { setCountdown(null); return }
+    setCountdown(10)
+    const timer = setInterval(() => {
+      setCountdown(prev => {
+        if (prev === null || prev <= 1) { clearInterval(timer); return 0 }
+        return prev - 1
+      })
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [gameState?.status, gameState?.current_question_index])
 
   async function fetchAll() {
     const { data: gs } = await supabase.from('wedding_game_state').select('*').eq('id', 1).single()
@@ -253,7 +267,16 @@ export default function ProjectorPage() {
           <h2 className="text-4xl font-bold mt-1">{currentQ.text}</h2>
           {isLocked
             ? <p className="text-orange-500 text-lg mt-2 animate-pulse">🔒 Voting Locked — Calculating…</p>
-            : <p className="text-stone-500 text-lg mt-2">Voting open…</p>
+            : <div className="flex items-center justify-center gap-4 mt-3">
+                <p className="text-stone-500 text-lg">Voting open…</p>
+                {countdown !== null && (
+                  <span className={`text-5xl font-black tabular-nums transition-colors ${
+                    countdown > 5 ? 'text-emerald-600' : countdown > 2 ? 'text-amber-500' : 'text-rose-600 animate-pulse'
+                  }`}>
+                    {countdown}
+                  </span>
+                )}
+              </div>
           }
         </div>
 
