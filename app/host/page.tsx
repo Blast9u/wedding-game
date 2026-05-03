@@ -94,8 +94,8 @@ export default function HostPage() {
   // RPC force_order: [rank1(-1pt)…rank4(2pt)] = picks reversed
   async function handleAnnounceOverride() {
     setLoading(true)
-    await supabase.from('wedding_game_state').update({ status: 'override' }).eq('id', 1)
-    await fetchGameState()
+    const { error } = await supabase.from('wedding_game_state').update({ status: 'override' }).eq('id', 1)
+    if (!error) setGameState(prev => prev ? { ...prev, status: 'override' } : prev)
     setLoading(false)
   }
 
