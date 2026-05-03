@@ -210,30 +210,37 @@ export default function GuestPage() {
 
   if (screen === 'voting' && currentQ) {
     return (
-      <main className="min-h-screen bg-amber-50 p-4">
+      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 p-4">
         <div className="max-w-lg mx-auto">
           <div className="text-center mb-6 pt-4">
             <p className="text-rose-500 text-sm font-medium uppercase tracking-widest">Question {(gameState?.current_question_index ?? 0) + 1}</p>
             <h2 className="text-xl font-bold mt-1 leading-snug text-stone-900">{currentQ.text}</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            {currentQ.options.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => handleVote(opt.id)}
-                disabled={!!selectedOption}
-                className={`relative rounded-2xl overflow-hidden aspect-square border-4 transition-all ${
-                  selectedOption === opt.id
-                    ? 'border-rose-500 scale-95'
-                    : 'border-transparent hover:border-stone-400 active:scale-95'
-                }`}
-              >
-                <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 py-1 text-sm font-medium text-white">
-                  {opt.label}
-                </div>
-              </button>
-            ))}
+            {currentQ.options.map((opt) => {
+              const hasImage = opt.image_url && !opt.image_url.startsWith('/images/')
+              const noImgBg: Record<string, string> = { a: 'bg-rose-200', b: 'bg-violet-200', c: 'bg-amber-200', d: 'bg-teal-200' }
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => handleVote(opt.id)}
+                  disabled={!!selectedOption}
+                  className={`relative rounded-2xl overflow-hidden aspect-square border-4 transition-all ${
+                    selectedOption === opt.id ? 'border-rose-500 scale-95' : 'border-transparent hover:border-stone-400 active:scale-95'
+                  } ${!hasImage ? (noImgBg[opt.id] ?? 'bg-stone-200') : ''}`}
+                >
+                  {hasImage
+                    ? <>
+                        <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 py-1 text-sm font-medium text-white">{opt.label}</div>
+                      </>
+                    : <div className="absolute inset-0 flex items-center justify-center p-4">
+                        <span className="text-stone-800 font-black text-2xl text-center leading-tight">{opt.label}</span>
+                      </div>
+                  }
+                </button>
+              )
+            })}
           </div>
           {error && <p className="text-red-600 text-sm text-center mt-4">{error}</p>}
         </div>
@@ -244,7 +251,7 @@ export default function GuestPage() {
   if (screen === 'voted') {
     const pts = guest?.score ?? 0
     return (
-      <main className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-4 gap-5">
+      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex flex-col items-center justify-center p-4 gap-5">
         <div className="text-6xl">✅</div>
         <h2 className="text-2xl font-bold text-stone-900">Vote Cast!</h2>
         <p className="text-stone-500">Waiting for others…</p>
@@ -261,7 +268,7 @@ export default function GuestPage() {
 
   if (screen === 'results') {
     return (
-      <main className="min-h-screen bg-amber-50 flex items-center justify-center p-4">
+      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="text-6xl mb-4">🎭</div>
           <h2 className="text-2xl font-bold text-stone-900">Results are in!</h2>

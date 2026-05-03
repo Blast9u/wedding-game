@@ -85,7 +85,7 @@ export default function ProjectorPage() {
   // --- IDLE SCREEN ---
   if (!gameState || gameState.status === 'waiting') {
     return (
-      <main className="min-h-screen bg-amber-50 flex items-center justify-center">
+      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center">
         <div className="text-center text-stone-900">
           <div className="text-7xl mb-6">💍</div>
           <h1 className="text-5xl font-bold mb-2">What do u mean where is the crowd? I am the crowd</h1>
@@ -140,7 +140,7 @@ export default function ProjectorPage() {
     const medals = ['🥇', '🥈', '🥉']
 
     return (
-      <main className="min-h-screen bg-amber-50 text-stone-900 p-6 flex flex-col">
+      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 text-stone-900 p-6 flex flex-col">
         {/* This round's ranking */}
         {rankedOptions.length > 0 && currentResult?.option_points && (
           <div className="mb-6">
@@ -148,10 +148,17 @@ export default function ProjectorPage() {
             <div className="grid grid-cols-4 gap-3 max-w-3xl mx-auto">
               {rankedOptions.map((opt) => {
                 const pts = currentResult.option_points![opt.id] ?? 0
+                const hasImage = opt.image_url && !opt.image_url.startsWith('/images/')
+                const noImgBg: Record<string, string> = { a: 'bg-rose-200', b: 'bg-violet-200', c: 'bg-amber-200', d: 'bg-teal-200' }
                 return (
                   <div key={opt.id} className={`rounded-2xl overflow-hidden border-4 ${ptsBorder(pts)}`}>
-                    <div className="relative aspect-square">
-                      <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
+                    <div className={`relative aspect-square ${!hasImage ? (noImgBg[opt.id] ?? 'bg-stone-200') : ''}`}>
+                      {hasImage
+                        ? <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
+                        : <div className="absolute inset-0 flex items-center justify-center p-3">
+                            <span className="text-stone-800 font-black text-xl text-center leading-tight">{opt.label}</span>
+                          </div>
+                      }
                     </div>
                     <div className={`p-2 text-center ${ptsBg(pts)}`}>
                       <p className={`font-bold text-sm ${ptsTextColor(pts)}`}>{opt.label}</p>
@@ -238,7 +245,7 @@ export default function ProjectorPage() {
   if ((gameState.status === 'voting' || gameState.status === 'locked') && currentQ) {
     const isLocked = gameState.status === 'locked'
     return (
-      <main className="min-h-screen bg-amber-50 text-stone-900 p-8 flex flex-col">
+      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 text-stone-900 p-8 flex flex-col">
         <div className="text-center mb-6">
           <p className="text-rose-500 text-sm font-medium uppercase tracking-widest">
             Question {gameState.current_question_index + 1}
@@ -251,19 +258,25 @@ export default function ProjectorPage() {
         </div>
 
         <div className="grid grid-cols-4 gap-4 flex-1">
-          {currentQ.options.map((opt) => (
-            <div
-              key={opt.id}
-              className="relative rounded-2xl overflow-hidden flex flex-col border-4 border-stone-300"
-            >
-              <div className="relative flex-1 min-h-48">
-                <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
+          {currentQ.options.map((opt) => {
+            const hasImage = opt.image_url && !opt.image_url.startsWith('/images/')
+            const noImgBg: Record<string, string> = { a: 'bg-rose-200', b: 'bg-violet-200', c: 'bg-amber-200', d: 'bg-teal-200' }
+            return (
+              <div key={opt.id} className="relative rounded-2xl overflow-hidden flex flex-col border-4 border-stone-300">
+                <div className={`relative flex-1 min-h-48 ${!hasImage ? (noImgBg[opt.id] ?? 'bg-stone-200') : ''}`}>
+                  {hasImage
+                    ? <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
+                    : <div className="absolute inset-0 flex items-center justify-center p-4">
+                        <span className="text-stone-800 font-black text-3xl text-center leading-tight">{opt.label}</span>
+                      </div>
+                  }
+                </div>
+                {hasImage && (
+                  <div className="p-2 text-center text-sm font-bold bg-stone-100 text-stone-800">{opt.label}</div>
+                )}
               </div>
-              <div className="p-2 text-center text-sm font-bold bg-stone-100 text-stone-800">
-                {opt.label}
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </main>
     )

@@ -130,7 +130,7 @@ export default function HostPage() {
   }
 
   return (
-    <main className="min-h-screen bg-amber-50 text-stone-900 p-6">
+    <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 text-stone-900 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* Header */}
@@ -233,6 +233,8 @@ export default function HostPage() {
                 const isPicked = pickIndex >= 0
                 const rankLabels = ['1st · +2pts', '2nd · +1pt', '3rd · 0pt', '4th · -1pt']
                 const rankColors = ['text-rose-600', 'text-orange-500', 'text-stone-500', 'text-emerald-600']
+                const hasImage = opt.image_url && !opt.image_url.startsWith('/images/')
+                const noImgBg: Record<string, string> = { a: 'bg-rose-200', b: 'bg-violet-200', c: 'bg-amber-200', d: 'bg-teal-200' }
                 return (
                   <button
                     key={opt.id}
@@ -246,15 +248,21 @@ export default function HostPage() {
                     }}
                     className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all ${
                       isPicked ? 'border-yellow-500 brightness-110' : 'border-stone-300 hover:border-yellow-400 hover:brightness-110'
-                    }`}
+                    } ${!hasImage ? (noImgBg[opt.id] ?? 'bg-stone-200') : ''}`}
                   >
-                    <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
-                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-end pb-1.5">
-                      <span className="text-white text-xs font-bold">{opt.label}</span>
-                      {isPicked && (
-                        <span className={`text-xs font-bold ${rankColors[pickIndex]}`}>{rankLabels[pickIndex]}</span>
-                      )}
-                    </div>
+                    {hasImage
+                      ? <>
+                          <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
+                          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-end pb-1.5">
+                            <span className="text-white text-xs font-bold">{opt.label}</span>
+                            {isPicked && <span className={`text-xs font-bold ${rankColors[pickIndex]}`}>{rankLabels[pickIndex]}</span>}
+                          </div>
+                        </>
+                      : <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 p-2">
+                          <span className="text-stone-800 font-black text-sm text-center leading-tight">{opt.label}</span>
+                          {isPicked && <span className={`text-xs font-bold ${rankColors[pickIndex]}`}>{rankLabels[pickIndex]}</span>}
+                        </div>
+                    }
                     {isPicked && (
                       <div className="absolute top-1.5 left-1.5 bg-yellow-400 text-stone-900 text-xs font-black w-6 h-6 rounded-full flex items-center justify-center">
                         {pickIndex + 1}
