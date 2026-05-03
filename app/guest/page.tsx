@@ -210,11 +210,11 @@ export default function GuestPage() {
 
   if (screen === 'voting' && currentQ) {
     return (
-      <main className="min-h-screen bg-gray-900 text-white p-4">
+      <main className="min-h-screen bg-amber-50 p-4">
         <div className="max-w-lg mx-auto">
           <div className="text-center mb-6 pt-4">
-            <p className="text-rose-400 text-sm font-medium uppercase tracking-widest">Question {(gameState?.current_question_index ?? 0) + 1}</p>
-            <h2 className="text-xl font-bold mt-1 leading-snug">{currentQ.text}</h2>
+            <p className="text-rose-500 text-sm font-medium uppercase tracking-widest">Question {(gameState?.current_question_index ?? 0) + 1}</p>
+            <h2 className="text-xl font-bold mt-1 leading-snug text-stone-900">{currentQ.text}</h2>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {currentQ.options.map((opt) => (
@@ -225,23 +225,17 @@ export default function GuestPage() {
                 className={`relative rounded-2xl overflow-hidden aspect-square border-4 transition-all ${
                   selectedOption === opt.id
                     ? 'border-rose-500 scale-95'
-                    : 'border-transparent hover:border-white/40 active:scale-95'
+                    : 'border-transparent hover:border-stone-400 active:scale-95'
                 }`}
               >
-                <Image
-                  src={opt.image_url}
-                  alt={opt.label}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 py-1 text-sm font-medium">
+                <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 py-1 text-sm font-medium text-white">
                   {opt.label}
                 </div>
               </button>
             ))}
           </div>
-          {error && <p className="text-red-400 text-sm text-center mt-4">{error}</p>}
+          {error && <p className="text-red-600 text-sm text-center mt-4">{error}</p>}
         </div>
       </main>
     )
@@ -250,30 +244,30 @@ export default function GuestPage() {
   if (screen === 'voted') {
     const pts = guest?.score ?? 0
     return (
-      <main className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4 gap-5">
+      <main className="min-h-screen bg-amber-50 flex flex-col items-center justify-center p-4 gap-5">
         <div className="text-6xl">✅</div>
-        <h2 className="text-2xl font-bold">Vote Cast!</h2>
-        <p className="text-gray-400">Waiting for others…</p>
-        <div className="bg-gray-800 rounded-2xl px-10 py-5 text-center">
-          <p className="text-xs text-gray-400 uppercase tracking-widest mb-1">Your Score</p>
-          <p className={`text-5xl font-black ${pts < 0 ? 'text-emerald-400' : pts === 0 ? 'text-gray-400' : 'text-rose-400'}`}>
+        <h2 className="text-2xl font-bold text-stone-900">Vote Cast!</h2>
+        <p className="text-stone-500">Waiting for others…</p>
+        <div className="bg-stone-100 rounded-2xl px-10 py-5 text-center shadow-sm">
+          <p className="text-xs text-stone-400 uppercase tracking-widest mb-1">Your Score</p>
+          <p className={`text-5xl font-black ${pts < 0 ? 'text-emerald-600' : pts === 0 ? 'text-stone-400' : 'text-rose-600'}`}>
             {pts > 0 ? `+${pts}` : pts}
           </p>
         </div>
-        <p className="text-sm text-rose-400">Don&apos;t lah be so Common!</p>
+        <p className="text-sm text-rose-500">Don&apos;t lah be so Common!</p>
       </main>
     )
   }
 
   if (screen === 'results') {
     return (
-      <main className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
+      <main className="min-h-screen bg-amber-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="text-6xl mb-4">🎭</div>
-          <h2 className="text-2xl font-bold">Results are in!</h2>
-          <p className="text-gray-400 mt-2">Check the big screen for the reveal.</p>
-          <p className="text-sm text-gray-500 mt-1">
-            Your penalty points: <span className="text-rose-400 font-bold">{guest?.score ?? 0}</span>
+          <h2 className="text-2xl font-bold text-stone-900">Results are in!</h2>
+          <p className="text-stone-500 mt-2">Check the big screen for the reveal.</p>
+          <p className="text-sm text-stone-400 mt-1">
+            Your penalty points: <span className="text-rose-600 font-bold">{guest?.score ?? 0}</span>
           </p>
         </div>
       </main>

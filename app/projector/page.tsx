@@ -85,15 +85,15 @@ export default function ProjectorPage() {
   // --- IDLE SCREEN ---
   if (!gameState || gameState.status === 'waiting') {
     return (
-      <main className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center text-white">
+      <main className="min-h-screen bg-amber-50 flex items-center justify-center">
+        <div className="text-center text-stone-900">
           <div className="text-7xl mb-6">💍</div>
           <h1 className="text-5xl font-bold mb-2">What do u mean where is the crowd? I am the crowd</h1>
-          <p className="text-xl text-gray-400 mb-10">Scan to join the game!</p>
-          <div className="bg-white rounded-3xl p-6 inline-block">
+          <p className="text-xl text-stone-500 mb-10">Scan to join the game!</p>
+          <div className="bg-white rounded-3xl p-6 inline-block shadow-lg">
             <QRCode value={GUEST_URL} size={220} />
           </div>
-          <p className="text-gray-500 mt-6 text-sm">{GUEST_URL}</p>
+          <p className="text-stone-400 mt-6 text-sm">{GUEST_URL}</p>
         </div>
       </main>
     )
@@ -101,13 +101,11 @@ export default function ProjectorPage() {
 
   // --- RESULTS / LEADERBOARD SCREEN ---
   if (gameState.status === 'results') {
-    const fmtPts = (g: Guest) => {
-      const pts = g.score ?? (g as unknown as Record<string, number>).penalty_points ?? 0
-      return pts > 0 ? `+${pts}` : String(pts)
-    }
+    const gScore = (g: Guest) => g.score ?? (g as unknown as Record<string, number>).penalty_points ?? 0
+    const fmtPts = (g: Guest) => { const p = gScore(g); return p > 0 ? `+${p}` : String(p) }
     const scoreColor = (g: Guest) => {
-      const pts = g.score ?? (g as unknown as Record<string, number>).penalty_points ?? 0
-      return pts < 0 ? 'text-emerald-400' : pts === 0 ? 'text-gray-300' : 'text-rose-400'
+      const p = gScore(g)
+      return p < 0 ? 'text-emerald-700' : p === 0 ? 'text-stone-400' : 'text-rose-600'
     }
 
     const rankedOptions = currentQ && currentResult?.option_points
@@ -117,19 +115,37 @@ export default function ProjectorPage() {
       : []
 
     const ptsBorder = (pts: number) =>
-      pts === -1 ? 'border-emerald-400' : pts === 2 ? 'border-rose-500' : 'border-gray-600'
+      pts === -1 ? 'border-emerald-500' : pts === 2 ? 'border-rose-500' : 'border-stone-300'
     const ptsBg = (pts: number) =>
-      pts === -1 ? 'bg-emerald-800' : pts === 2 ? 'bg-rose-900' : 'bg-gray-800'
+      pts === -1 ? 'bg-emerald-50' : pts === 2 ? 'bg-rose-50' : 'bg-stone-100'
+    const ptsTextColor = (pts: number) =>
+      pts === -1 ? 'text-emerald-700' : pts === 2 ? 'text-rose-700' : 'text-stone-600'
     const ptsLabel = (pts: number) =>
       pts === -1 ? 'Most Popular' : pts === 0 ? '2nd' : pts === 1 ? '3rd' : 'Least Popular'
 
+    // Table rankings
+    const tableMap: Record<number, Guest[]> = {}
+    for (const g of guests) {
+      if (!tableMap[g.table_number]) tableMap[g.table_number] = []
+      tableMap[g.table_number].push(g)
+    }
+    const tableRankings = Object.entries(tableMap)
+      .map(([tNum, members]) => ({
+        table: Number(tNum),
+        avg: members.reduce((s, m) => s + gScore(m), 0) / members.length,
+        members: [...members].sort((a, b) => gScore(a) - gScore(b)),
+      }))
+      .sort((a, b) => a.avg - b.avg)
+
+    const medals = ['🥇', '🥈', '🥉']
+
     return (
-      <main className="min-h-screen bg-gray-950 text-white p-8 flex flex-col">
+      <main className="min-h-screen bg-amber-50 text-stone-900 p-6 flex flex-col">
         {/* This round's ranking */}
         {rankedOptions.length > 0 && currentResult?.option_points && (
-          <div className="mb-8">
-            <p className="text-center text-gray-400 text-sm uppercase tracking-widest mb-4">This Round&apos;s Ranking</p>
-            <div className="grid grid-cols-4 gap-4 max-w-3xl mx-auto">
+          <div className="mb-6">
+            <p className="text-center text-stone-400 text-xs uppercase tracking-widest mb-3">This Round&apos;s Ranking</p>
+            <div className="grid grid-cols-4 gap-3 max-w-3xl mx-auto">
               {rankedOptions.map((opt) => {
                 const pts = currentResult.option_points![opt.id] ?? 0
                 return (
@@ -138,8 +154,8 @@ export default function ProjectorPage() {
                       <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
                     </div>
                     <div className={`p-2 text-center ${ptsBg(pts)}`}>
-                      <p className="font-bold text-sm">{opt.label}</p>
-                      <p className="text-xs text-gray-300">{ptsLabel(pts)} · {pts > 0 ? `+${pts}` : pts} pt</p>
+                      <p className={`font-bold text-sm ${ptsTextColor(pts)}`}>{opt.label}</p>
+                      <p className={`text-xs ${ptsTextColor(pts)}`}>{ptsLabel(pts)} · {pts > 0 ? `+${pts}` : pts} pt</p>
                     </div>
                   </div>
                 )
@@ -148,31 +164,72 @@ export default function ProjectorPage() {
           </div>
         )}
 
-        <h1 className="text-3xl font-bold text-center mb-2">🏆 I am the Most NPC</h1>
-        <p className="text-center text-gray-500 text-sm mb-5">Lower score = less NPC = better!</p>
+        {/* Two-column leaderboard */}
+        <div className="flex gap-5 flex-1 min-h-0">
 
-        {guests.length === 0 ? (
-          <p className="text-center text-gray-500 mt-6">Loading scores…</p>
-        ) : (
-          <div className="max-w-2xl mx-auto w-full space-y-2">
-            {guests.map((g, i) => {
-              const medals = ['🥇', '🥈', '🥉']
-              return (
-                <div
-                  key={g.id}
-                  className={`flex items-center justify-between rounded-2xl px-5 py-3 ${
-                    i < 3 ? 'bg-gray-700 border border-gray-600' : 'bg-gray-800'
-                  }`}
-                >
-                  <span className="text-xl w-10">{medals[i] ?? `#${i + 1}`}</span>
-                  <span className="flex-1 font-semibold text-lg">{g.name}</span>
-                  <span className="text-gray-400 text-sm mr-6">Table {g.table_number}</span>
-                  <span className={`font-black text-2xl ${scoreColor(g)}`}>{fmtPts(g)}</span>
-                </div>
-              )
-            })}
+          {/* Left: Individual */}
+          <div className="flex-1 flex flex-col">
+            <h2 className="text-xl font-bold mb-2">🏆 I am the Most NPC</h2>
+            <p className="text-stone-400 text-xs mb-3">Lower score = less NPC = better!</p>
+            {guests.length === 0 ? (
+              <p className="text-stone-400 text-sm">Loading…</p>
+            ) : (
+              <div className="space-y-1.5 overflow-y-auto">
+                {guests.map((g, i) => (
+                  <div
+                    key={g.id}
+                    className={`flex items-center justify-between rounded-xl px-4 py-2.5 ${
+                      i < 3 ? 'bg-stone-200 border border-stone-300' : 'bg-stone-100'
+                    }`}
+                  >
+                    <span className="text-lg w-8">{medals[i] ?? `#${i + 1}`}</span>
+                    <span className="flex-1 font-semibold">{g.name}</span>
+                    <span className="text-stone-400 text-xs mr-4">T{g.table_number}</span>
+                    <span className={`font-black text-xl ${scoreColor(g)}`}>{fmtPts(g)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Right: Table rankings */}
+          <div className="flex-1 flex flex-col">
+            <h2 className="text-xl font-bold mb-2">🪑 Table Rankings</h2>
+            <p className="text-stone-400 text-xs mb-3">Avg score per table — lowest wins!</p>
+            {tableRankings.length === 0 ? (
+              <p className="text-stone-400 text-sm">Loading…</p>
+            ) : (
+              <div className="space-y-2 overflow-y-auto">
+                {tableRankings.map((t, i) => (
+                  <div key={t.table} className={`rounded-xl overflow-hidden border ${i === 0 ? 'border-emerald-400' : 'border-stone-200'}`}>
+                    <div className={`flex items-center px-4 py-2.5 ${i === 0 ? 'bg-emerald-50' : 'bg-stone-100'}`}>
+                      <span className="text-lg w-8">{medals[i] ?? `#${i + 1}`}</span>
+                      <span className="flex-1 font-bold">Table {t.table}</span>
+                      <span className={`font-black text-lg ${t.avg < 0 ? 'text-emerald-700' : t.avg === 0 ? 'text-stone-400' : 'text-rose-600'}`}>
+                        avg {t.avg > 0 ? `+${t.avg.toFixed(1)}` : t.avg.toFixed(1)}
+                      </span>
+                    </div>
+                    {/* Expand lowest-scoring table to show members */}
+                    {i === 0 && (
+                      <div className="bg-emerald-50/60 px-4 pb-2 space-y-1">
+                        {t.members.map((m, mi) => (
+                          <div key={m.id} className="flex items-center justify-between text-sm pl-8">
+                            <span className="text-stone-500 mr-2">#{mi + 1}</span>
+                            <span className="flex-1 text-stone-700">{m.name}</span>
+                            <span className={`font-bold ${gScore(m) < 0 ? 'text-emerald-700' : gScore(m) === 0 ? 'text-stone-400' : 'text-rose-600'}`}>
+                              {fmtPts(m)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
       </main>
     )
   }
@@ -181,29 +238,28 @@ export default function ProjectorPage() {
   if ((gameState.status === 'voting' || gameState.status === 'locked') && currentQ) {
     const isLocked = gameState.status === 'locked'
     return (
-      <main className="min-h-screen bg-gray-950 text-white p-8 flex flex-col">
+      <main className="min-h-screen bg-amber-50 text-stone-900 p-8 flex flex-col">
         <div className="text-center mb-6">
-          <p className="text-rose-400 text-sm font-medium uppercase tracking-widest">
+          <p className="text-rose-500 text-sm font-medium uppercase tracking-widest">
             Question {gameState.current_question_index + 1}
           </p>
           <h2 className="text-4xl font-bold mt-1">{currentQ.text}</h2>
           {isLocked
-            ? <p className="text-orange-400 text-lg mt-2 animate-pulse">🔒 Voting Locked — Calculating…</p>
-            : <p className="text-gray-400 text-lg mt-2">Voting open…</p>
+            ? <p className="text-orange-500 text-lg mt-2 animate-pulse">🔒 Voting Locked — Calculating…</p>
+            : <p className="text-stone-500 text-lg mt-2">Voting open…</p>
           }
         </div>
 
-        {/* Option images — no vote counts shown at any stage here */}
         <div className="grid grid-cols-4 gap-4 flex-1">
           {currentQ.options.map((opt) => (
             <div
               key={opt.id}
-              className="relative rounded-2xl overflow-hidden flex flex-col border-4 border-gray-700"
+              className="relative rounded-2xl overflow-hidden flex flex-col border-4 border-stone-300"
             >
               <div className="relative flex-1 min-h-48">
                 <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
               </div>
-              <div className="p-2 text-center text-sm font-bold bg-gray-800">
+              <div className="p-2 text-center text-sm font-bold bg-stone-100 text-stone-800">
                 {opt.label}
               </div>
             </div>

@@ -54,7 +54,7 @@ function SortableQuestion({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="bg-gray-800 rounded-2xl p-6 space-y-5">
+    <div ref={setNodeRef} style={style} className="bg-stone-100 rounded-2xl p-6 space-y-5">
       {/* Question header with drag handle */}
       <div className="flex items-start gap-3">
         {/* Drag handle */}
@@ -74,7 +74,7 @@ function SortableQuestion({
         <span className="text-rose-400 font-bold text-sm mt-2.5 shrink-0">Q{displayIndex + 1}</span>
 
         <input
-          className="flex-1 bg-gray-700 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-rose-400"
+          className="flex-1 bg-white border border-stone-300 rounded-xl px-4 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-rose-400 text-stone-900"
           value={q.text}
           onChange={(e) => onTextChange(q.question_index, e.target.value)}
           placeholder="Question text…"
@@ -97,12 +97,12 @@ function SortableQuestion({
           const hasImage = opt.image_url && !opt.image_url.startsWith('/images/')
 
           return (
-            <div key={opt.id} className="bg-gray-700 rounded-xl overflow-hidden">
+            <div key={opt.id} className="bg-stone-200 rounded-xl overflow-hidden">
               <label className="relative block aspect-video cursor-pointer group">
                 {hasImage ? (
                   <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-600 gap-1">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-stone-300 gap-1">
                     <span className="text-2xl">📷</span>
                     <span className="text-gray-400 text-xs">Click to upload</span>
                   </div>
@@ -130,7 +130,7 @@ function SortableQuestion({
               </label>
               <div className="p-2">
                 <input
-                  className="w-full bg-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400"
+                  className="w-full bg-white border border-stone-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 text-stone-900"
                   value={opt.label}
                   onChange={(e) => onLabelChange(q.question_index, opt.id, e.target.value)}
                   placeholder={`Option ${opt.id.toUpperCase()} label`}
@@ -247,7 +247,7 @@ export default function SetupPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white p-6">
+    <main className="min-h-screen bg-amber-50 text-stone-900 p-6">
       <div className="max-w-3xl mx-auto space-y-6">
 
         {/* Header */}

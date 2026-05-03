@@ -93,10 +93,7 @@ export default function HostPage() {
   // picks[0]=most penalized(2pts) … picks[3]=least penalized(-1pt)
   // RPC force_order: [rank1(-1pt)…rank4(2pt)] = picks reversed
   async function handleAnnounceOverride() {
-    setLoading(true)
-    const { error } = await supabase.from('wedding_game_state').update({ status: 'override' }).eq('id', 1)
-    if (!error) setGameState(prev => prev ? { ...prev, status: 'override' } : prev)
-    setLoading(false)
+    await updateGameState({ status: 'override' })
   }
 
   async function handleApplyOverride() {
@@ -133,20 +130,20 @@ export default function HostPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-950 text-white p-6">
+    <main className="min-h-screen bg-amber-50 text-stone-900 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
 
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">🎙️ Host Dashboard</h1>
-            <p className="text-gray-400 text-sm mt-1">What do u mean where is the crowd? I am the crowd</p>
+            <p className="text-stone-500 text-sm mt-1">What do u mean where is the crowd? I am the crowd</p>
           </div>
           <div className="flex gap-2">
             <Link href="/host/setup" className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg transition-colors font-medium">
               🛠️ Setup Questions
             </Link>
-            <button onClick={handleResetGame} disabled={loading} className="text-xs bg-red-900 hover:bg-red-700 text-red-200 px-3 py-1.5 rounded-lg transition-colors">
+            <button onClick={handleResetGame} disabled={loading} className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg transition-colors">
               Reset Game
             </button>
           </div>
@@ -154,25 +151,25 @@ export default function HostPage() {
 
         {/* Status strip */}
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-gray-800 rounded-2xl p-4 text-center">
-            <p className="text-gray-400 text-xs uppercase tracking-wider">Status</p>
+          <div className="bg-stone-100 rounded-2xl p-4 text-center">
+            <p className="text-stone-500 text-xs uppercase tracking-wider">Status</p>
             <span className={`inline-block mt-1 px-3 py-1 rounded-full text-sm font-bold ${statusColor[gameState?.status ?? 'waiting']}`}>
               {gameState?.status ?? '…'}
             </span>
           </div>
-          <div className="bg-gray-800 rounded-2xl p-4 text-center">
-            <p className="text-gray-400 text-xs uppercase tracking-wider">Guests Joined</p>
+          <div className="bg-stone-100 rounded-2xl p-4 text-center">
+            <p className="text-stone-500 text-xs uppercase tracking-wider">Guests Joined</p>
             <p className="text-3xl font-bold mt-1">{guestCount}</p>
           </div>
-          <div className="bg-gray-800 rounded-2xl p-4 text-center">
-            <p className="text-gray-400 text-xs uppercase tracking-wider">Votes In</p>
+          <div className="bg-stone-100 rounded-2xl p-4 text-center">
+            <p className="text-stone-500 text-xs uppercase tracking-wider">Votes In</p>
             <p className="text-3xl font-bold mt-1">{voteCount} / {guestCount}</p>
           </div>
         </div>
 
         {/* Current question */}
-        <div className="bg-gray-800 rounded-2xl p-5">
-          <p className="text-gray-400 text-sm mb-1">Question {(gameState?.current_question_index ?? 0) + 1} of {questions.length}</p>
+        <div className="bg-stone-100 rounded-2xl p-5">
+          <p className="text-stone-500 text-sm mb-1">Question {(gameState?.current_question_index ?? 0) + 1} of {questions.length}</p>
           <p className="text-lg font-semibold">{currentQ?.text}</p>
         </div>
 
@@ -180,7 +177,7 @@ export default function HostPage() {
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={handleNextQuestion}
-            disabled={loading || gameState?.status === 'voting' || gameState?.status === 'locked' || isLastQuestion && gameState?.status !== 'waiting'}
+            disabled={loading || gameState?.status === 'voting' || gameState?.status === 'locked' || gameState?.status === 'override' || isLastQuestion && gameState?.status !== 'waiting'}
             className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl text-lg transition-colors"
           >
             {isLastQuestion ? '✅ Last Question Done' : gameState?.status === 'waiting' ? '🚀 Start Game' : '▶️ Next Question'}
@@ -203,25 +200,25 @@ export default function HostPage() {
 
         {/* ── GROOM OVERRIDE ── */}
 
-        {/* Step 1: Announce button — shown during results before override is triggered */}
+        {/* Step 1: Announce button */}
         {gameState?.status === 'results' && (
           <button
             onClick={handleAnnounceOverride}
             disabled={loading}
-            className="w-full bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 text-black font-black py-4 rounded-2xl text-lg transition-colors"
+            className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:opacity-40 text-stone-900 font-black py-4 rounded-2xl text-lg transition-colors"
           >
             💥 Groom Override!
           </button>
         )}
 
-        {/* Step 2: Ranking UI — shown while projector is on OVERRIDE screen */}
+        {/* Step 2: Ranking UI */}
         {gameState?.status === 'override' && (
-          <div className="bg-gray-900 border border-yellow-500 rounded-2xl p-5">
-            <h2 className="text-yellow-400 font-bold text-lg mb-1">👑 Rank the Options</h2>
-            <p className="text-yellow-300 text-xs mb-1">
+          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-2xl p-5">
+            <h2 className="text-yellow-700 font-bold text-lg mb-1">👑 Rank the Options</h2>
+            <p className="text-yellow-600 text-xs mb-1">
               Tap options in order — 1st tap = most penalized (2 pts) → 4th tap = least penalized (-1 pt)
             </p>
-            <p className="text-gray-400 text-sm mb-3 font-medium">
+            <p className="text-stone-600 text-sm mb-3 font-medium">
               {overrideOrder.length === 0
                 ? 'Tap your 1st choice (gets +2 pts)'
                 : overrideOrder.length < 4
@@ -229,13 +226,13 @@ export default function HostPage() {
                 : '✅ All ranked! Hit Apply when ready.'}
             </p>
 
-            {!currentQ && <p className="text-gray-500 text-sm py-4 text-center">Loading question…</p>}
+            {!currentQ && <p className="text-stone-400 text-sm py-4 text-center">Loading question…</p>}
             <div className="grid grid-cols-4 gap-2 mb-4">
               {(currentQ?.options ?? []).map((opt) => {
                 const pickIndex = overrideOrder.indexOf(opt.id)
                 const isPicked = pickIndex >= 0
                 const rankLabels = ['1st · +2pts', '2nd · +1pt', '3rd · 0pt', '4th · -1pt']
-                const rankColors = ['text-rose-400', 'text-orange-400', 'text-gray-300', 'text-emerald-400']
+                const rankColors = ['text-rose-600', 'text-orange-500', 'text-stone-500', 'text-emerald-600']
                 return (
                   <button
                     key={opt.id}
@@ -248,7 +245,7 @@ export default function HostPage() {
                       }
                     }}
                     className={`relative rounded-lg overflow-hidden aspect-square border-2 transition-all ${
-                      isPicked ? 'border-yellow-400 brightness-110' : 'border-gray-600 hover:border-yellow-500 hover:brightness-110'
+                      isPicked ? 'border-yellow-500 brightness-110' : 'border-stone-300 hover:border-yellow-400 hover:brightness-110'
                     }`}
                   >
                     <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
@@ -259,7 +256,7 @@ export default function HostPage() {
                       )}
                     </div>
                     {isPicked && (
-                      <div className="absolute top-1.5 left-1.5 bg-yellow-500 text-black text-xs font-black w-6 h-6 rounded-full flex items-center justify-center">
+                      <div className="absolute top-1.5 left-1.5 bg-yellow-400 text-stone-900 text-xs font-black w-6 h-6 rounded-full flex items-center justify-center">
                         {pickIndex + 1}
                       </div>
                     )}
@@ -272,14 +269,14 @@ export default function HostPage() {
               <button
                 onClick={() => setOverrideOrder([])}
                 disabled={overrideOrder.length === 0 || loading}
-                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 text-gray-200 text-sm font-bold rounded-xl transition-colors"
+                className="px-4 py-2 bg-stone-200 hover:bg-stone-300 disabled:opacity-30 text-stone-700 text-sm font-bold rounded-xl transition-colors"
               >
                 Reset
               </button>
               <button
                 onClick={handleApplyOverride}
                 disabled={overrideOrder.length !== 4 || loading}
-                className="flex-1 bg-yellow-500 hover:bg-yellow-400 disabled:opacity-30 disabled:cursor-not-allowed text-black font-black py-2 rounded-xl text-base transition-colors"
+                className="flex-1 bg-yellow-400 hover:bg-yellow-300 disabled:opacity-30 disabled:cursor-not-allowed text-stone-900 font-black py-2 rounded-xl text-base transition-colors"
               >
                 {loading ? 'Applying…' : overrideOrder.length === 4 ? '✅ Apply Override' : `Rank all 4 first (${overrideOrder.length}/4)`}
               </button>
@@ -288,19 +285,19 @@ export default function HostPage() {
         )}
 
         {/* Leaderboard */}
-        <div className="bg-gray-800 rounded-2xl p-5">
+        <div className="bg-stone-100 rounded-2xl p-5">
           <h2 className="font-bold text-lg mb-3">Live Penalty Leaderboard</h2>
           {guests.length === 0 ? (
-            <p className="text-gray-500 text-sm">No guests yet.</p>
+            <p className="text-stone-400 text-sm">No guests yet.</p>
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {guests.map((g, i) => (
                 <div key={g.id} className="flex items-center justify-between text-sm">
-                  <span className="text-gray-300">
-                    <span className="text-gray-500 mr-2">#{i + 1}</span>
-                    {g.name} <span className="text-gray-500">· Table {g.table_number}</span>
+                  <span className="text-stone-700">
+                    <span className="text-stone-400 mr-2">#{i + 1}</span>
+                    {g.name} <span className="text-stone-400">· Table {g.table_number}</span>
                   </span>
-                  <span className={`font-bold ${g.score > 0 ? 'text-rose-400' : 'text-gray-500'}`}>
+                  <span className={`font-bold ${g.score > 0 ? 'text-rose-600' : 'text-stone-400'}`}>
                     {g.score} pts
                   </span>
                 </div>
