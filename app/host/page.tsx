@@ -140,7 +140,7 @@ export default function HostPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">🎙️ Host Dashboard</h1>
-            <p className="text-gray-400 text-sm mt-1">Majority Loses — Wedding Game</p>
+            <p className="text-gray-400 text-sm mt-1">What do u mean where is the crowd? I am the crowd</p>
           </div>
           <div className="flex gap-2">
             <Link href="/host/setup" className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg transition-colors font-medium">

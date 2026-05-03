@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Majority Loses — Wedding Game",
+  title: "What do u mean where is the crowd? I am the crowd",
   description: "A live wedding voting game where the majority loses!",
 };
 

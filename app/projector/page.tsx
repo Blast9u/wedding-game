@@ -88,7 +88,7 @@ export default function ProjectorPage() {
       <main className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="text-7xl mb-6">💍</div>
-          <h1 className="text-5xl font-bold mb-2">Majority Loses</h1>
+          <h1 className="text-5xl font-bold mb-2">What do u mean where is the crowd? I am the crowd</h1>
           <p className="text-xl text-gray-400 mb-10">Scan to join the game!</p>
           <div className="bg-white rounded-3xl p-6 inline-block">
             <QRCode value={GUEST_URL} size={220} />
@@ -148,8 +148,8 @@ export default function ProjectorPage() {
           </div>
         )}
 
-        <h1 className="text-3xl font-bold text-center mb-2">🏆 Most Common People</h1>
-        <p className="text-center text-gray-500 text-sm mb-5">Lower score = less common = better!</p>
+        <h1 className="text-3xl font-bold text-center mb-2">🏆 I am the Most NPC</h1>
+        <p className="text-center text-gray-500 text-sm mb-5">Lower score = less NPC = better!</p>
 
         {guests.length === 0 ? (
           <p className="text-center text-gray-500 mt-6">Loading scores…</p>
