@@ -201,8 +201,8 @@ export default function ProjectorPage() {
 
           {/* Right: Table rankings */}
           <div className="flex-1 flex flex-col">
-            <h2 className="text-xl font-bold mb-2">🪑 Table Rankings</h2>
-            <p className="text-stone-400 text-xs mb-3">Avg score per table — lowest wins!</p>
+            <h2 className="text-xl font-bold mb-2">🪑 The most NPC Table.</h2>
+            <p className="text-stone-400 text-xs mb-3">&quot;Hello, It&apos;s dangerous to go alone! Take this Potion!&quot;</p>
             {tableRankings.length === 0 ? (
               <p className="text-stone-400 text-sm">Loading…</p>
             ) : (
