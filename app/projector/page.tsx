@@ -9,7 +9,7 @@ import { supabase, GameState, Guest } from '@/lib/supabase'
 import { fetchQuestions, GameQuestion } from '@/lib/questions'
 
 const GUEST_URL = process.env.NEXT_PUBLIC_SITE_URL
-  ? `${process.env.NEXT_PUBLIC_SITE_URL}/guest`
+  ? `${process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, '')}/guest`
   : '/guest'
 
 interface QuestionResult {
