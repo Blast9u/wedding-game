@@ -146,7 +146,8 @@ export default function ProjectorPage() {
           members: [...members].sort((a, b) => gScore(a) - gScore(b)),
         }))
         .sort((a, b) => a.avg - b.avg)
-      const winner = tableRankings2[0]
+      const mostNPC = tableRankings2[0]      // lowest avg = chose popular the most = most NPC
+      const leastNPC = tableRankings2[tableRankings2.length - 1]  // highest avg = most individual = winner
 
       return (
         <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 text-stone-900 p-8 flex flex-col items-center justify-center gap-8">
@@ -156,13 +157,13 @@ export default function ProjectorPage() {
             <p className="text-stone-500 mt-2 text-lg">The least NPC table wins!</p>
           </div>
 
-          {winner && (
+          {leastNPC && tableRankings2.length > 1 && (
             <div className="bg-emerald-50 border-4 border-emerald-400 rounded-3xl p-8 text-center w-full max-w-lg shadow-lg">
-              <p className="text-emerald-600 text-sm font-bold uppercase tracking-widest mb-1">🏆 Winning Table</p>
-              <p className="text-6xl font-black text-emerald-700 mb-1">Table {winner.table}</p>
-              <p className="text-emerald-600 font-bold mb-6">avg {winner.avg > 0 ? `+${winner.avg.toFixed(1)}` : winner.avg.toFixed(1)} pts</p>
+              <p className="text-emerald-600 text-sm font-bold uppercase tracking-widest mb-1">🏆 Least NPC Table</p>
+              <p className="text-6xl font-black text-emerald-700 mb-1">Table {leastNPC.table}</p>
+              <p className="text-emerald-600 font-bold mb-6">avg {leastNPC.avg > 0 ? `+${leastNPC.avg.toFixed(1)}` : leastNPC.avg.toFixed(1)} pts</p>
               <div className="space-y-2 text-left">
-                {winner.members.map((m, mi) => (
+                {leastNPC.members.map((m, mi) => (
                   <div key={m.id} className="flex items-center justify-between bg-white/60 rounded-xl px-4 py-2">
                     <span className="text-stone-400 text-sm w-6">#{mi + 1}</span>
                     <span className="flex-1 font-semibold">{m.name}</span>
@@ -175,9 +176,28 @@ export default function ProjectorPage() {
             </div>
           )}
 
-          {tableRankings2.length > 1 && (
+          {mostNPC && (
+            <div className="bg-rose-50 border-4 border-rose-400 rounded-3xl p-8 text-center w-full max-w-lg shadow-lg">
+              <p className="text-rose-600 text-sm font-bold uppercase tracking-widest mb-1">🤖 Table with the most NPC</p>
+              <p className="text-6xl font-black text-rose-700 mb-1">Table {mostNPC.table}</p>
+              <p className="text-rose-500 font-bold mb-6">avg {mostNPC.avg > 0 ? `+${mostNPC.avg.toFixed(1)}` : mostNPC.avg.toFixed(1)} pts</p>
+              <div className="space-y-2 text-left">
+                {mostNPC.members.map((m, mi) => (
+                  <div key={m.id} className="flex items-center justify-between bg-white/60 rounded-xl px-4 py-2">
+                    <span className="text-stone-400 text-sm w-6">#{mi + 1}</span>
+                    <span className="flex-1 font-semibold">{m.name}</span>
+                    <span className={`font-black text-lg ${gScore(m) < 0 ? 'text-emerald-700' : gScore(m) === 0 ? 'text-stone-400' : 'text-rose-600'}`}>
+                      {gScore(m) > 0 ? `+${gScore(m)}` : gScore(m)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {tableRankings2.length > 2 && (
             <div className="w-full max-w-lg space-y-2">
-              {tableRankings2.slice(1).map((t, i) => (
+              {tableRankings2.slice(1, -1).map((t, i) => (
                 <div key={t.table} className="flex items-center justify-between bg-white/50 rounded-xl px-5 py-3">
                   <span className="text-stone-400 text-sm w-6">#{i + 2}</span>
                   <span className="flex-1 font-semibold">Table {t.table}</span>
