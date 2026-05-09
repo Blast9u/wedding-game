@@ -338,7 +338,7 @@ export default function ProjectorPage() {
     const totalGuests = guests.length
 
     return (
-      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 text-stone-900 p-6 flex flex-col">
+      <main className="h-screen bg-gradient-to-br from-rose-50 to-pink-100 text-stone-900 p-6 flex flex-col overflow-hidden">
         <div className="text-center mb-4">
           <p className="text-rose-500 text-sm font-medium uppercase tracking-widest">
             Question {gameState.current_question_index + 1}
