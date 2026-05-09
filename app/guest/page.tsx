@@ -19,6 +19,7 @@ export default function GuestPage() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [myVotes, setMyVotes] = useState<Record<number, string>>({})
   const [error, setError] = useState('')
+  const [restoring, setRestoring] = useState(true)
 
   useEffect(() => { fetchQuestions().then(setQuestions) }, [])
 
@@ -32,11 +33,16 @@ export default function GuestPage() {
   // Restore session from localStorage on page load / refresh
   useEffect(() => {
     const savedId = localStorage.getItem('wedding_guest_id')
-    if (!savedId) return
+    const savedVotes = localStorage.getItem('wedding_guest_votes')
+    if (savedVotes) {
+      try { setMyVotes(JSON.parse(savedVotes)) } catch {}
+    }
+    if (!savedId) { setRestoring(false); return }
     supabase.from('wedding_guests').select('*').eq('id', savedId).single()
       .then(({ data, error }) => {
-        if (error || !data) { localStorage.removeItem('wedding_guest_id'); return }
-        setGuest(data)
+        if (error || !data) { localStorage.removeItem('wedding_guest_id') }
+        else { setGuest(data) }
+        setRestoring(false)
       })
   }, [])
 
@@ -81,6 +87,7 @@ export default function GuestPage() {
           // Game was reset — clear session
           if (gs.status === 'waiting' && gs.current_question_index === 0) {
             localStorage.removeItem('wedding_guest_id')
+            localStorage.removeItem('wedding_guest_votes')
             setGuest(null)
             setMyVotes({})
             setSelectedOption(null)
@@ -139,11 +146,23 @@ export default function GuestPage() {
       return
     }
 
-    setMyVotes((prev) => ({ ...prev, [gameState.current_question_index]: optionId }))
+    setMyVotes((prev) => {
+      const next = { ...prev, [gameState.current_question_index]: optionId }
+      localStorage.setItem('wedding_guest_votes', JSON.stringify(next))
+      return next
+    })
     setScreen('voted')
   }
 
   const currentQ = gameState ? questions[gameState.current_question_index] : null
+
+  if (restoring) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center">
+        <div className="text-rose-400 text-5xl animate-pulse">💍</div>
+      </main>
+    )
+  }
 
   if (screen === 'login') {
     return (
