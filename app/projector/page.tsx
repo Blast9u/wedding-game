@@ -359,7 +359,7 @@ export default function ProjectorPage() {
 
         <div className="flex gap-4 flex-1 min-h-0">
           {/* Options */}
-          <div className="flex-[3] grid grid-cols-4 gap-3" style={{ gridAutoRows: '1fr' }}>
+          <div className="flex-[3] grid grid-cols-4 gap-3 h-full" style={{ gridAutoRows: '1fr' }}>
             {currentQ.options.map((opt) => {
               const hasImage = opt.image_url && !opt.image_url.startsWith('/images/')
               const noImgBg: Record<string, string> = { a: 'bg-rose-200', b: 'bg-violet-200', c: 'bg-amber-200', d: 'bg-teal-200' }
