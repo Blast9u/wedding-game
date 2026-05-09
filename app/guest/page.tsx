@@ -29,23 +29,37 @@ export default function GuestPage() {
     else if (gs.status === 'results') setScreen('results')
   }, [])
 
+  // Restore session from localStorage on page load / refresh
+  useEffect(() => {
+    const savedId = localStorage.getItem('wedding_guest_id')
+    if (!savedId) return
+    supabase.from('wedding_guests').select('*').eq('id', savedId).single()
+      .then(({ data, error }) => {
+        if (error || !data) { localStorage.removeItem('wedding_guest_id'); return }
+        setGuest(data)
+      })
+  }, [])
+
   // Subscribe to game_state changes after login
   useEffect(() => {
     if (!guest) return
 
-    // Fetch current game state
-    supabase
-      .from('wedding_game_state')
-      .select('*')
-      .eq('id', 1)
-      .single()
-      .then(({ data }) => {
-        if (data) {
+    // Fetch current game state and sync screen immediately
+    const resync = (votes: Record<number, string> = myVotes) => {
+      supabase.from('wedding_game_state').select('*').eq('id', 1).single()
+        .then(({ data }) => {
+          if (!data) return
           setGameState(data)
-          const hasVoted = !!myVotes[data.current_question_index]
-          syncScreen(data, hasVoted)
-        }
-      })
+          syncScreen(data, !!votes[data.current_question_index])
+        })
+    }
+    resync()
+
+    // Re-sync when phone screen unlocks / tab becomes visible
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') resync()
+    }
+    document.addEventListener('visibilitychange', handleVisibility)
 
     // Subscribe to own guest record for live score updates
     const guestChannel = supabase
@@ -64,8 +78,9 @@ export default function GuestPage() {
         { event: 'UPDATE', schema: 'public', table: 'wedding_game_state', filter: 'id=eq.1' },
         (payload) => {
           const gs = payload.new as GameState
-          // Game was reset — clear session so guest re-registers with a fresh DB record
+          // Game was reset — clear session
           if (gs.status === 'waiting' && gs.current_question_index === 0) {
+            localStorage.removeItem('wedding_guest_id')
             setGuest(null)
             setMyVotes({})
             setSelectedOption(null)
@@ -84,7 +99,11 @@ export default function GuestPage() {
       )
       .subscribe()
 
-    return () => { supabase.removeChannel(channel); supabase.removeChannel(guestChannel) }
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility)
+      supabase.removeChannel(channel)
+      supabase.removeChannel(guestChannel)
+    }
   }, [guest, myVotes, syncScreen])
 
   async function handleLogin(e: React.FormEvent) {
@@ -99,6 +118,7 @@ export default function GuestPage() {
       .single()
 
     if (dbErr) { setError('Could not join. Try again.'); return }
+    localStorage.setItem('wedding_guest_id', data.id)
     setGuest(data)
     setScreen('waiting')
   }
