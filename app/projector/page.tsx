@@ -359,13 +359,13 @@ export default function ProjectorPage() {
 
         <div className="flex gap-4 flex-1 min-h-0">
           {/* Options */}
-          <div className="flex-[3] grid grid-cols-4 gap-3 content-start">
+          <div className="flex-[3] grid grid-cols-4 gap-3" style={{ gridAutoRows: '1fr' }}>
             {currentQ.options.map((opt) => {
               const hasImage = opt.image_url && !opt.image_url.startsWith('/images/')
               const noImgBg: Record<string, string> = { a: 'bg-rose-200', b: 'bg-violet-200', c: 'bg-amber-200', d: 'bg-teal-200' }
               return (
                 <div key={opt.id} className="relative rounded-2xl overflow-hidden flex flex-col border-4 border-stone-300">
-                  <div className={`relative flex-1 min-h-40 ${!hasImage ? (noImgBg[opt.id] ?? 'bg-stone-200') : ''}`}>
+                  <div className={`relative flex-1 ${!hasImage ? (noImgBg[opt.id] ?? 'bg-stone-200') : ''}`}>
                     {hasImage
                       ? <Image src={opt.image_url} alt={opt.label} fill className="object-cover" unoptimized />
                       : <div className="absolute inset-0 flex items-center justify-center p-4">
