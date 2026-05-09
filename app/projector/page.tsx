@@ -382,7 +382,7 @@ export default function ProjectorPage() {
           </div>
 
           {/* Vote tracker */}
-          <div className="flex-1 bg-white/70 rounded-2xl p-4 flex flex-col min-h-0">
+          <div className="w-44 shrink-0 bg-white/70 rounded-2xl p-3 flex flex-col min-h-0">
             <p className="font-bold text-stone-700 text-sm uppercase tracking-wider mb-1">Votes In</p>
             <p className={`text-4xl font-black mb-3 ${votedCount === totalGuests ? 'text-emerald-600' : 'text-rose-600'}`}>
               {votedCount} / {totalGuests}
@@ -392,10 +392,9 @@ export default function ProjectorPage() {
                 <p className="text-xs text-stone-400 uppercase tracking-wider mb-2">Still waiting on…</p>
                 <div className="overflow-y-auto space-y-1 flex-1">
                   {notVoted.map(g => (
-                    <div key={g.id} className="text-sm text-stone-700 flex items-center gap-2">
-                      <span className="text-rose-400">⏳</span>
-                      <span>{g.name}</span>
-                      <span className="text-stone-400 text-xs">T{g.table_number}</span>
+                    <div key={g.id} className="text-xs text-stone-700 flex items-center gap-1.5 truncate">
+                      <span className="text-rose-400 shrink-0">⏳</span>
+                      <span className="truncate">{g.name}</span>
                     </div>
                   ))}
                 </div>
