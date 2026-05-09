@@ -151,7 +151,7 @@ export default function GuestPage() {
                 value={tableNumber}
                 onChange={(e) => setTableNumber(Number(e.target.value))}
               >
-                {[1,2,3,4,5,6,7,8,9].map((n) => (
+                {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
                   <option key={n} value={n}>Table {n}</option>
                 ))}
               </select>
