@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import Image from 'next/image'
 import { supabase, GameState, Guest } from '@/lib/supabase'
 import { fetchQuestions, GameQuestion } from '@/lib/questions'
@@ -18,8 +18,12 @@ export default function GuestPage() {
   const [questions, setQuestions] = useState<GameQuestion[]>([])
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [myVotes, setMyVotes] = useState<Record<number, string>>({})
+  const myVotesRef = useRef<Record<number, string>>({})
   const [error, setError] = useState('')
   const [restoring, setRestoring] = useState(true)
+
+  // Keep ref in sync so subscription closure always reads latest votes
+  useEffect(() => { myVotesRef.current = myVotes }, [myVotes])
 
   useEffect(() => { fetchQuestions().then(setQuestions) }, [])
 
@@ -50,16 +54,19 @@ export default function GuestPage() {
   useEffect(() => {
     if (!guest) return
 
-    // Fetch current game state and sync screen immediately
-    const resync = (votes: Record<number, string> = myVotes) => {
+    // Always reads from ref so this never needs to re-run when votes change
+    const resync = () => {
       supabase.from('wedding_game_state').select('*').eq('id', 1).single()
         .then(({ data }) => {
           if (!data) return
           setGameState(data)
-          syncScreen(data, !!votes[data.current_question_index])
+          syncScreen(data, !!myVotesRef.current[data.current_question_index])
         })
     }
     resync()
+
+    // Polling fallback in case Realtime drops (every 5s)
+    const poll = setInterval(resync, 5000)
 
     // Re-sync when phone screen unlocks / tab becomes visible
     const handleVisibility = () => {
@@ -67,7 +74,6 @@ export default function GuestPage() {
     }
     document.addEventListener('visibilitychange', handleVisibility)
 
-    // Subscribe to own guest record for live score updates
     const guestChannel = supabase
       .channel('guest-score')
       .on(
@@ -84,12 +90,12 @@ export default function GuestPage() {
         { event: 'UPDATE', schema: 'public', table: 'wedding_game_state', filter: 'id=eq.1' },
         (payload) => {
           const gs = payload.new as GameState
-          // Game was reset — clear session
           if (gs.status === 'waiting' && gs.current_question_index === 0) {
             localStorage.removeItem('wedding_guest_id')
             localStorage.removeItem('wedding_guest_votes')
-            setGuest(null)
+            myVotesRef.current = {}
             setMyVotes({})
+            setGuest(null)
             setSelectedOption(null)
             setGameState(null)
             setScreen('login')
@@ -97,21 +103,19 @@ export default function GuestPage() {
           }
           setGameState(gs)
           setSelectedOption(null)
-          setMyVotes((prev) => {
-            const hasVoted = !!prev[gs.current_question_index]
-            syncScreen(gs, hasVoted)
-            return prev
-          })
+          // Read ref directly — no stale closure, no re-subscription needed
+          syncScreen(gs, !!myVotesRef.current[gs.current_question_index])
         }
       )
       .subscribe()
 
     return () => {
+      clearInterval(poll)
       document.removeEventListener('visibilitychange', handleVisibility)
       supabase.removeChannel(channel)
       supabase.removeChannel(guestChannel)
     }
-  }, [guest, myVotes, syncScreen])
+  }, [guest, syncScreen])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
