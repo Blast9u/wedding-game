@@ -99,8 +99,8 @@ export default function HostPage() {
   async function handleApplyOverride() {
     if (!gameState || overrideOrder.length !== 4) return
     setLoading(true)
-    const forceOrder = [...overrideOrder].reverse()
-    await supabase.rpc('apply_question_result', { q_index: gameState.current_question_index, force_order: forceOrder })
+    // Only rank 1 pick gets +2pts — pass it as the sole penalised option
+    await supabase.rpc('apply_question_result', { q_index: gameState.current_question_index, override_pick: overrideOrder[0] })
     await supabase.from('wedding_game_state').update({ status: 'results' }).eq('id', 1)
     await fetchAll()
     setOverrideOrder([])
@@ -137,7 +137,7 @@ export default function HostPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">🎙️ Host Dashboard</h1>
-            <p className="text-stone-500 text-sm mt-1">What do u mean where is the crowd? I am the crowd</p>
+            <p className="text-stone-500 text-sm mt-1">i wanna be the vrey BEST, Like no one ever was</p>
           </div>
           <div className="flex gap-2">
             <Link href="/host/setup" className="text-xs bg-indigo-700 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg transition-colors font-medium">

@@ -116,7 +116,7 @@ export default function ProjectorPage() {
       <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center">
         <div className="text-center text-stone-900">
           <div className="text-7xl mb-6">💍</div>
-          <h1 className="text-5xl font-bold mb-2">What do u mean where is the crowd? I am the crowd</h1>
+          <h1 className="text-5xl font-bold mb-2">i wanna be the vrey BEST,<br />Like no one ever was</h1>
           <p className="text-xl text-stone-500 mb-10">Scan to join the game!</p>
           <div className="bg-white rounded-3xl p-6 inline-block shadow-lg">
             <QRCode value={GUEST_URL} size={220} />
@@ -266,13 +266,13 @@ export default function ProjectorPage() {
 
           {/* Left: Individual */}
           <div className="flex-1 flex flex-col">
-            <h2 className="text-xl font-bold mb-2">🏆 I am the Most NPC</h2>
-            <p className="text-stone-400 text-xs mb-3">Lower score = less NPC = better!</p>
+            <h2 className="text-xl font-bold mb-2">🌟 I am the Main Character! I am Unique!</h2>
+            <p className="text-stone-400 text-xs mb-3">Higher score = more unique = winner!</p>
             {guests.length === 0 ? (
               <p className="text-stone-400 text-sm">Loading…</p>
             ) : (
               <div className="space-y-1.5 overflow-y-auto">
-                {guests.map((g, i) => (
+                {[...guests].sort((a, b) => gScore(b) - gScore(a)).map((g, i) => (
                   <div
                     key={g.id}
                     className={`flex items-center justify-between rounded-xl px-4 py-2.5 ${
