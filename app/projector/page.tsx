@@ -116,7 +116,7 @@ export default function ProjectorPage() {
       <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center">
         <div className="text-center text-stone-900">
           <div className="text-7xl mb-6">💍</div>
-          <h1 className="text-5xl font-bold mb-2">i wanna be the vrey BEST,<br />Like no one ever was</h1>
+          <h1 className="text-5xl font-bold mb-2">I wanna be the very BEST,<br />Like no one EVER WAS</h1>
           <p className="text-xl text-stone-500 mb-10">Scan to join the game!</p>
           <div className="bg-white rounded-3xl p-6 inline-block shadow-lg">
             <QRCode value={GUEST_URL} size={220} />

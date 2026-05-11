@@ -188,8 +188,8 @@ export default function GuestPage() {
         <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-sm">
           <div className="text-center mb-6">
             <div className="text-4xl mb-2">💍</div>
-            <h1 className="text-2xl font-bold text-rose-700">i wanna be the vrey BEST,<br />Like no one ever was</h1>
-            <p className="text-sm text-gray-500 mt-1">The wedding game where the crowd loses!</p>
+            <h1 className="text-2xl font-bold text-rose-700">I wanna be the very BEST,<br />Like no one EVER WAS</h1>
+            <p className="text-sm text-gray-500 mt-1">The Game where u WIN if you&apos;re UNIQUE</p>
           </div>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
