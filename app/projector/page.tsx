@@ -146,49 +146,105 @@ export default function ProjectorPage() {
           members: [...members].sort((a, b) => gScore(a) - gScore(b)),
         }))
         .sort((a, b) => a.avg - b.avg)
-      const mostNPC = tableRankings2[0]  // lowest avg = followed the crowd most = hall of shame
+      const mostNPC = tableRankings2[0]
+      const top30 = [...guests].sort((a, b) => gScore(b) - gScore(a)).slice(0, 30)
+      const fmtS = (g: Guest) => { const p = gScore(g); return p > 0 ? `+${p}` : String(p) }
+      const sColor = (p: number) => p > 0 ? 'text-emerald-600' : p === 0 ? 'text-stone-400' : 'text-rose-500'
 
       return (
-        <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 text-stone-900 p-8 flex flex-col items-center justify-center gap-8">
-          <div className="text-center">
-            <div className="text-7xl mb-3">🤖</div>
-            <h1 className="text-5xl font-black">Game Over!</h1>
+        <main className="h-screen bg-gradient-to-br from-rose-50 to-pink-100 text-stone-900 p-5 flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="text-center mb-4 shrink-0">
+            <h1 className="text-4xl font-black">🎉 Game Over!</h1>
           </div>
 
-          {mostNPC && (
-            <div className="bg-rose-50 border-4 border-rose-500 rounded-3xl p-8 text-center w-full max-w-lg shadow-xl">
-              <p className="text-rose-500 text-sm font-bold uppercase tracking-widest mb-1">🏆 Hall of Shame</p>
-              <p className="text-rose-400 text-lg font-bold mb-1">Table with the most NPC</p>
-              <p className="text-7xl font-black text-rose-700 mb-1">Table {mostNPC.table}</p>
-              <p className="text-rose-400 font-semibold mb-5">avg {mostNPC.avg > 0 ? `+${mostNPC.avg.toFixed(1)}` : mostNPC.avg.toFixed(1)} pts</p>
-              <div className="space-y-2 text-left">
-                {[...mostNPC.members].sort((a, b) => gScore(a) - gScore(b)).map((m, mi) => (
-                  <div key={m.id} className="flex items-center justify-between bg-white/70 rounded-xl px-4 py-2">
-                    <span className="text-stone-400 text-sm w-6">#{mi + 1}</span>
-                    <span className="flex-1 font-semibold">{m.name}</span>
-                    <span className={`font-black text-lg ${gScore(m) < 0 ? 'text-emerald-700' : gScore(m) === 0 ? 'text-stone-400' : 'text-rose-600'}`}>
-                      {gScore(m) > 0 ? `+${gScore(m)}` : gScore(m)}
-                    </span>
+          <div className="flex gap-5 flex-1 min-h-0">
+
+            {/* Left: Individual top 30 */}
+            <div className="flex-[3] flex flex-col min-h-0">
+              <h2 className="text-lg font-bold mb-3 shrink-0">🌟 I am the Main Character! I am Unique!</h2>
+
+              {/* Podium */}
+              {top30.length > 0 && (
+                <div className="flex items-end justify-center gap-3 mb-4 shrink-0">
+                  {/* 2nd */}
+                  {top30[1] && (
+                    <div className="text-center">
+                      <p className="font-bold text-sm mb-1">{top30[1].name}</p>
+                      <p className="text-stone-500 text-xs mb-1">{fmtS(top30[1])} pts</p>
+                      <div className="h-16 w-28 bg-stone-300 rounded-t-xl flex items-center justify-center text-2xl">🥈</div>
+                    </div>
+                  )}
+                  {/* 1st */}
+                  {top30[0] && (
+                    <div className="text-center">
+                      <p className="font-bold mb-1">{top30[0].name}</p>
+                      <p className="text-stone-500 text-sm mb-1">{fmtS(top30[0])} pts</p>
+                      <div className="h-24 w-28 bg-yellow-400 rounded-t-xl flex items-center justify-center text-3xl">🥇</div>
+                    </div>
+                  )}
+                  {/* 3rd */}
+                  {top30[2] && (
+                    <div className="text-center">
+                      <p className="font-bold text-sm mb-1">{top30[2].name}</p>
+                      <p className="text-stone-500 text-xs mb-1">{fmtS(top30[2])} pts</p>
+                      <div className="h-10 w-28 bg-amber-600 rounded-t-xl flex items-center justify-center text-2xl">🥉</div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Ranks 4–30 */}
+              <div className="overflow-y-auto space-y-1 flex-1">
+                {top30.slice(3).map((g, i) => (
+                  <div key={g.id} className="flex items-center justify-between bg-white/50 rounded-lg px-3 py-1.5">
+                    <span className="text-stone-400 text-xs w-6">#{i + 4}</span>
+                    <span className="flex-1 font-medium text-sm">{g.name}</span>
+                    <span className="text-stone-400 text-xs mr-3">T{g.table_number}</span>
+                    <span className={`font-bold text-sm ${sColor(gScore(g))}`}>{fmtS(g)}</span>
                   </div>
                 ))}
               </div>
             </div>
-          )}
 
-          {tableRankings2.length > 1 && (
-            <div className="w-full max-w-lg space-y-2">
-              <p className="text-stone-400 text-xs uppercase tracking-widest text-center mb-1">All Tables</p>
-              {tableRankings2.slice(1).map((t, i) => (
-                <div key={t.table} className="flex items-center justify-between bg-white/50 rounded-xl px-5 py-3">
-                  <span className="text-stone-400 text-sm w-6">#{i + 2}</span>
-                  <span className="flex-1 font-semibold">Table {t.table}</span>
-                  <span className={`font-bold ${t.avg < 0 ? 'text-emerald-600' : t.avg === 0 ? 'text-stone-400' : 'text-rose-600'}`}>
-                    avg {t.avg > 0 ? `+${t.avg.toFixed(1)}` : t.avg.toFixed(1)}
-                  </span>
+            {/* Right: Hall of shame */}
+            <div className="flex-[2] flex flex-col min-h-0 gap-3">
+              {mostNPC && (
+                <div className="bg-rose-50 border-4 border-rose-500 rounded-3xl p-5 text-center shadow-xl flex flex-col min-h-0">
+                  <p className="text-rose-500 text-xs font-bold uppercase tracking-widest mb-0.5 shrink-0">🏆 Hall of Shame</p>
+                  <p className="text-rose-400 text-sm font-bold mb-0.5 shrink-0">Table with the most NPC</p>
+                  <p className="text-5xl font-black text-rose-700 shrink-0">Table {mostNPC.table}</p>
+                  <p className="text-rose-400 text-sm font-semibold mb-3 shrink-0">
+                    avg {mostNPC.avg > 0 ? `+${mostNPC.avg.toFixed(1)}` : mostNPC.avg.toFixed(1)} pts
+                  </p>
+                  <div className="space-y-1.5 text-left overflow-y-auto flex-1">
+                    {[...mostNPC.members].sort((a, b) => gScore(a) - gScore(b)).map((m, mi) => (
+                      <div key={m.id} className="flex items-center justify-between bg-white/70 rounded-xl px-3 py-1.5">
+                        <span className="text-stone-400 text-xs w-5">#{mi + 1}</span>
+                        <span className="flex-1 font-semibold text-sm">{m.name}</span>
+                        <span className={`font-black text-sm ${sColor(gScore(m))}`}>{fmtS(m)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
+              {tableRankings2.length > 1 && (
+                <div className="space-y-1.5 overflow-y-auto">
+                  <p className="text-stone-400 text-xs uppercase tracking-widest text-center">All Tables</p>
+                  {tableRankings2.slice(1).map((t, i) => (
+                    <div key={t.table} className="flex items-center justify-between bg-white/50 rounded-xl px-4 py-2">
+                      <span className="text-stone-400 text-xs w-5">#{i + 2}</span>
+                      <span className="flex-1 font-semibold text-sm">Table {t.table}</span>
+                      <span className={`font-bold text-sm ${sColor(t.avg)}`}>
+                        avg {t.avg > 0 ? `+${t.avg.toFixed(1)}` : t.avg.toFixed(1)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}
+
+          </div>
         </main>
       )
     }

@@ -19,11 +19,25 @@ export default function GuestPage() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [myVotes, setMyVotes] = useState<Record<number, string>>({})
   const myVotesRef = useRef<Record<number, string>>({})
+  const [rank, setRank] = useState<number | null>(null)
+  const [totalGuests, setTotalGuests] = useState(0)
   const [error, setError] = useState('')
   const [restoring, setRestoring] = useState(true)
 
   // Keep ref in sync so subscription closure always reads latest votes
   useEffect(() => { myVotesRef.current = myVotes }, [myVotes])
+
+  // Fetch rank whenever on results screen or score changes (covers groom override)
+  useEffect(() => {
+    if (screen !== 'results' || !guest) return
+    Promise.all([
+      supabase.from('wedding_guests').select('*', { count: 'exact', head: true }).gt('score', guest.score),
+      supabase.from('wedding_guests').select('*', { count: 'exact', head: true }),
+    ]).then(([{ count: above }, { count: total }]) => {
+      setRank((above ?? 0) + 1)
+      setTotalGuests(total ?? 0)
+    })
+  }, [screen, guest?.score])
 
   useEffect(() => { fetchQuestions().then(setQuestions) }, [])
 
@@ -310,16 +324,29 @@ export default function GuestPage() {
   }
 
   if (screen === 'results') {
+    const pts = guest?.score ?? 0
     return (
-      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center p-4">
+      <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex flex-col items-center justify-center p-4 gap-5">
         <div className="text-center">
-          <div className="text-6xl mb-4">🎭</div>
+          <div className="text-5xl mb-2">🎭</div>
           <h2 className="text-2xl font-bold text-stone-900">Results are in!</h2>
-          <p className="text-stone-500 mt-2">Check the big screen for the reveal.</p>
-          <p className="text-sm text-stone-400 mt-1">
-            Your penalty points: <span className="text-rose-600 font-bold">{guest?.score ?? 0}</span>
+          <p className="text-stone-500 text-sm mt-1">Check the big screen for the reveal.</p>
+        </div>
+
+        <div className="bg-white rounded-3xl shadow-lg px-10 py-6 text-center w-full max-w-xs">
+          <p className="text-xs text-stone-400 uppercase tracking-widest mb-1">Your Score</p>
+          <p className={`text-6xl font-black ${pts > 0 ? 'text-emerald-600' : pts === 0 ? 'text-stone-400' : 'text-rose-600'}`}>
+            {pts > 0 ? `+${pts}` : pts}
           </p>
         </div>
+
+        {rank !== null && (
+          <div className="bg-white rounded-3xl shadow-lg px-10 py-5 text-center w-full max-w-xs">
+            <p className="text-xs text-stone-400 uppercase tracking-widest mb-1">Your Ranking</p>
+            <p className="text-5xl font-black text-stone-800">#{rank}</p>
+            <p className="text-stone-400 text-xs mt-1">of {totalGuests} players</p>
+          </div>
+        )}
       </main>
     )
   }
