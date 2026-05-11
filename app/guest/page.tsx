@@ -51,15 +51,25 @@ export default function GuestPage() {
   // Restore session from localStorage on page load / refresh
   useEffect(() => {
     const savedId = localStorage.getItem('wedding_guest_id')
+    // Only load cached votes if there's also a saved guest ID — otherwise they're stale from a past game
+    if (!savedId) { setRestoring(false); return }
     const savedVotes = localStorage.getItem('wedding_guest_votes')
     if (savedVotes) {
-      try { setMyVotes(JSON.parse(savedVotes)) } catch {}
+      try {
+        const parsed = JSON.parse(savedVotes)
+        setMyVotes(parsed)
+        myVotesRef.current = parsed
+      } catch {}
     }
-    if (!savedId) { setRestoring(false); return }
     supabase.from('wedding_guests').select('*').eq('id', savedId).single()
       .then(({ data, error }) => {
-        if (error || !data) { localStorage.removeItem('wedding_guest_id') }
-        else { setGuest(data) }
+        if (error || !data) {
+          localStorage.removeItem('wedding_guest_id')
+          localStorage.removeItem('wedding_guest_votes')
+          myVotesRef.current = {}
+        } else {
+          setGuest(data)
+        }
         setRestoring(false)
       })
   }, [])
@@ -144,6 +154,9 @@ export default function GuestPage() {
 
     if (dbErr) { setError('Could not join. Try again.'); return }
     localStorage.setItem('wedding_guest_id', data.id)
+    localStorage.removeItem('wedding_guest_votes')
+    myVotesRef.current = {}
+    setMyVotes({})
     setGuest(data)
     setScreen('waiting')
   }
