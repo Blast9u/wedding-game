@@ -341,7 +341,7 @@ export default function GuestPage() {
     return (
       <main className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex flex-col items-center justify-center p-4 gap-5">
         <div className="text-center">
-          <div className="text-5xl mb-2">🎭</div>
+          <div className="text-5xl mb-2">💍</div>
           <h2 className="text-2xl font-bold text-stone-900">Results are in!</h2>
           <p className="text-stone-500 text-sm mt-1">Check the big screen for the reveal.</p>
         </div>
